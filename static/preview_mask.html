@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { margin: 0; background: #0a0a0f; display: flex; justify-content: center; align-items: center; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1000" height="1200"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const W = 1000, H = 1200;
+const cx = W/2, cy = H/2 - 60;
+
+// === BACKGROUND ===
+ctx.fillStyle = '#0a0a0f';
+ctx.fillRect(0, 0, W, H);
+
+// Subtle HUD grid
+ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+ctx.lineWidth = 1;
+for (let x = 0; x < W; x += 50) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+}
+for (let y = 0; y < H; y += 50) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+}
+
+// Radial glow behind helmet
+const bgGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 400);
+bgGlow.addColorStop(0, 'rgba(0,255,65,0.03)');
+bgGlow.addColorStop(0.5, 'rgba(0,191,255,0.02)');
+bgGlow.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = bgGlow;
+ctx.fillRect(0, 0, W, H);
+
+// === HELMET — Front-facing, angular, aggressive ===
+
+// --- Top Crest ---
+ctx.beginPath();
+ctx.moveTo(cx, cy - 380);
+ctx.lineTo(cx + 40, cy - 340);
+ctx.lineTo(cx + 35, cy - 300);
+ctx.lineTo(cx - 35, cy - 300);
+ctx.lineTo(cx - 40, cy - 340);
+ctx.closePath();
+ctx.fillStyle = '#1a1a1e';
+ctx.fill();
+ctx.strokeStyle = '#c0c0c8';
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Red light on crest
+const crestGrad = ctx.createRadialGradient(cx + 15, cy - 350, 0, cx + 15, cy - 350, 12);
+crestGrad.addColorStop(0, '#ff4444');
+crestGrad.addColorStop(0.5, '#ff0000');
+crestGrad.addColorStop(1, 'rgba(255,0,0,0)');
+ctx.fillStyle = crestGrad;
+ctx.beginPath();
+ctx.arc(cx + 15, cy - 345, 8, 0, Math.PI * 2);
+ctx.fill();
+
+// --- Main Helmet Shell ---
+// Left side
+ctx.beginPath();
+ctx.moveTo(cx, cy - 380);
+ctx.lineTo(cx - 60, cy - 350);
+ctx.lineTo(cx - 140, cy - 300);
+ctx.lineTo(cx - 200, cy - 230);
+ctx.lineTo(cx - 240, cy - 150);
+ctx.lineTo(cx - 260, cy - 60);
+ctx.lineTo(cx - 270, cy + 30);
+ctx.lineTo(cx - 260, cy + 100);
+ctx.lineTo(cx - 230, cy + 160);
+ctx.lineTo(cx - 180, cy + 210);
+ctx.lineTo(cx - 120, cy + 250);
+ctx.lineTo(cx, cy + 280);
+ctx.lineTo(cx, cy - 380);
+ctx.fillStyle = '#14161a';
+ctx.fill();
+
+// Right side (mirror)
+ctx.beginPath();
+ctx.moveTo(cx, cy - 380);
+ctx.lineTo(cx + 60, cy - 350);
+ctx.lineTo(cx + 140, cy - 300);
+ctx.lineTo(cx + 200, cy - 230);
+ctx.lineTo(cx + 240, cy - 150);
+ctx.lineTo(cx + 260, cy - 60);
+ctx.lineTo(cx + 270, cy + 30);
+ctx.lineTo(cx + 260, cy + 100);
+ctx.lineTo(cx + 230, cy + 160);
+ctx.lineTo(cx + 180, cy + 210);
+ctx.lineTo(cx + 120, cy + 250);
+ctx.lineTo(cx, cy + 280);
+ctx.lineTo(cx, cy - 380);
+ctx.fillStyle = '#16181e';
+ctx.fill();
+
+// Outline
+ctx.beginPath();
+ctx.moveTo(cx, cy - 380);
+ctx.lineTo(cx - 60, cy - 350);
+ctx.lineTo(cx - 140, cy - 300);
+ctx.lineTo(cx - 200, cy - 230);
+ctx.lineTo(cx - 240, cy - 150);
+ctx.lineTo(cx - 260, cy - 60);
+ctx.lineTo(cx - 270, cy + 30);
+ctx.lineTo(cx - 260, cy + 100);
+ctx.lineTo(cx - 230, cy + 160);
+ctx.lineTo(cx - 180, cy + 210);
+ctx.lineTo(cx - 120, cy + 250);
+ctx.lineTo(cx, cy + 280);
+ctx.lineTo(cx + 120, cy + 250);
+ctx.lineTo(cx + 180, cy + 210);
+ctx.lineTo(cx + 230, cy + 160);
+ctx.lineTo(cx + 260, cy + 100);
+ctx.lineTo(cx + 270, cy + 30);
+ctx.lineTo(cx + 260, cy - 60);
+ctx.lineTo(cx + 240, cy - 150);
+ctx.lineTo(cx + 200, cy - 230);
+ctx.lineTo(cx + 140, cy - 300);
+ctx.lineTo(cx + 60, cy - 350);
+ctx.closePath();
+ctx.strokeStyle = '#8a9098';
+ctx.lineWidth = 3;
+ctx.stroke();
+
+// --- Forehead Panel (angular) ---
+ctx.beginPath();
+ctx.moveTo(cx - 120, cy - 280);
+ctx.lineTo(cx - 180, cy - 220);
+ctx.lineTo(cx - 195, cy - 170);
+ctx.lineTo(cx - 160, cy - 150);
+ctx.lineTo(cx - 40, cy - 160);
+ctx.lineTo(cx, cy - 180);
+ctx.lineTo(cx + 40, cy - 160);
+ctx.lineTo(cx + 160, cy - 150);
+ctx.lineTo(cx + 195, cy - 170);
+ctx.lineTo(cx + 180, cy - 220);
+ctx.lineTo(cx + 120, cy - 280);
+ctx.closePath();
+ctx.fillStyle = '#1c1e24';
+ctx.fill();
+ctx.strokeStyle = '#5a6068';
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Silver accent strips on forehead
+ctx.beginPath();
+ctx.moveTo(cx - 140, cy - 260);
+ctx.lineTo(cx - 170, cy - 210);
+ctx.strokeStyle = '#c0c0c8';
+ctx.lineWidth = 3;
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(cx + 140, cy - 260);
+ctx.lineTo(cx + 170, cy - 210);
+ctx.stroke();
+
+// --- Side Panels (silver triangular) ---
+// Left
+ctx.beginPath();
+ctx.moveTo(cx - 200, cy - 220);
+ctx.lineTo(cx - 240, cy - 140);
+ctx.lineTo(cx - 210, cy - 160);
+ctx.closePath();
+ctx.fillStyle = '#a0a4ac';
+ctx.fill();
+
+// Right
+ctx.beginPath();
+ctx.moveTo(cx + 200, cy - 220);
+ctx.lineTo(cx + 240, cy - 140);
+ctx.lineTo(cx + 210, cy - 160);
+ctx.closePath();
+ctx.fillStyle = '#a0a4ac';
+ctx.fill();
+
+// --- Eye Sockets ---
+function drawEye(ex, ey, flip) {
+    const dir = flip ? -1 : 1;
+    
+    // Red frame/outline of eye socket
+    const socketPts = [
+        [ex - 85*dir, ey - 5],
+        [ex - 40*dir, ey - 25],
+        [ex + 15*dir, ey - 28],
+        [ex + 65*dir, ey - 15],
+        [ex + 75*dir, ey],
+        [ex + 65*dir, ey + 15],
+        [ex + 10*dir, ey + 25],
+        [ex - 45*dir, ey + 20],
+        [ex - 80*dir, ey + 8],
+    ];
+    
+    // Red outer glow
+    for (let i = 6; i > 0; i--) {
+        ctx.beginPath();
+        socketPts.forEach((p, j) => {
+            const dx = p[0] - ex, dy = p[1] - ey;
+            const px = ex + dx * (1 + i * 0.02);
+            const py = ey + dy * (1 + i * 0.02);
+            j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255,0,0,${0.04 * i})`;
+        ctx.fill();
+    }
+    
+    // Red frame
+    ctx.beginPath();
+    socketPts.forEach((p, j) => j === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    ctx.closePath();
+    ctx.fillStyle = '#0c0e12';
+    ctx.fill();
+    ctx.strokeStyle = '#ff2222';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Green eye (inner)
+    const eyePts = [
+        [ex - 65*dir, ey],
+        [ex - 30*dir, ey - 15],
+        [ex + 20*dir, ey - 18],
+        [ex + 55*dir, ey - 8],
+        [ex + 55*dir, ey + 8],
+        [ex + 20*dir, ey + 15],
+        [ex - 30*dir, ey + 12],
+    ];
+    
+    // Green outer glow
+    for (let i = 8; i > 0; i--) {
+        ctx.beginPath();
+        eyePts.forEach((p, j) => {
+            const dx = p[0] - ex, dy = p[1] - ey;
+            const px = ex + dx * (1 + i * 0.02);
+            const py = ey + dy * (1 + i * 0.02);
+            j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fillStyle = `rgba(0,255,65,${0.06 * i})`;
+        ctx.fill();
+    }
+    
+    // Green eye fill
+    ctx.beginPath();
+    eyePts.forEach((p, j) => j === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    ctx.closePath();
+    
+    const eyeGrad = ctx.createRadialGradient(ex + 15*dir, ey, 0, ex + 15*dir, ey, 40);
+    eyeGrad.addColorStop(0, '#80ffb0');
+    eyeGrad.addColorStop(0.3, '#00ff41');
+    eyeGrad.addColorStop(0.7, '#00cc33');
+    eyeGrad.addColorStop(1, '#008822');
+    ctx.fillStyle = eyeGrad;
+    ctx.fill();
+    
+    // White hot center
+    const coreGrad = ctx.createRadialGradient(ex + 20*dir, ey, 0, ex + 20*dir, ey, 15);
+    coreGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    coreGrad.addColorStop(0.5, 'rgba(200,255,220,0.5)');
+    coreGrad.addColorStop(1, 'rgba(0,255,65,0)');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(ex + 20*dir, ey, 15, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Grid texture inside eye
+    ctx.save();
+    ctx.beginPath();
+    eyePts.forEach((p, j) => j === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    ctx.closePath();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(0,200,50,0.15)';
+    ctx.lineWidth = 0.5;
+    for (let gx = ex - 80; gx < ex + 80; gx += 6) {
+        ctx.beginPath(); ctx.moveTo(gx, ey - 30); ctx.lineTo(gx, ey + 30); ctx.stroke();
+    }
+    for (let gy = ey - 30; gy < ey + 30; gy += 6) {
+        ctx.beginPath(); ctx.moveTo(ex - 80, gy); ctx.lineTo(ex + 80, gy); ctx.stroke();
+    }
+    ctx.restore();
+}
+
+drawEye(cx - 95, cy - 55, false);
+drawEye(cx + 95, cy - 55, true);
+
+// --- Nose Ridge ---
+ctx.beginPath();
+ctx.moveTo(cx, cy - 160);
+ctx.lineTo(cx - 5, cy - 30);
+ctx.lineTo(cx, cy + 20);
+ctx.lineTo(cx + 5, cy - 30);
+ctx.closePath();
+ctx.fillStyle = '#1a1c22';
+ctx.fill();
+ctx.strokeStyle = '#5a6068';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+// --- Mouth / Vent Grille ---
+for (let i = 0; i < 7; i++) {
+    const vy = cy + 50 + i * 16;
+    const vw = 85 - i * 8;
+    ctx.beginPath();
+    ctx.moveTo(cx - vw, vy);
+    ctx.lineTo(cx + vw, vy);
+    ctx.strokeStyle = i < 2 ? 'rgba(0,255,65,0.5)' : 'rgba(80,90,100,0.6)';
+    ctx.lineWidth = i < 2 ? 3 : 2;
+    ctx.stroke();
+}
+
+// Green glow on lower vents
+const ventGlow = ctx.createRadialGradient(cx, cy + 80, 0, cx, cy + 80, 100);
+ventGlow.addColorStop(0, 'rgba(0,255,65,0.06)');
+ventGlow.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = ventGlow;
+ctx.fillRect(cx - 100, cy + 40, 200, 80);
+
+// --- Side Red/Green Accent Lines ---
+[1, -1].forEach(dir => {
+    // Red line
+    ctx.beginPath();
+    ctx.moveTo(cx + dir * 220, cy - 80);
+    ctx.lineTo(cx + dir * 240, cy - 40);
+    ctx.lineTo(cx + dir * 235, cy + 20);
+    ctx.strokeStyle = '#ff3333';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Green line
+    ctx.beginPath();
+    ctx.moveTo(cx + dir * 215, cy + 40);
+    ctx.lineTo(cx + dir * 230, cy + 90);
+    ctx.lineTo(cx + dir * 220, cy + 140);
+    ctx.strokeStyle = '#00ff41';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+});
+
+// --- CHAINS (blue-cyan metallic) ---
+function drawChain(startX, startY, endX, endY, linkCount) {
+    const dx = (endX - startX) / linkCount;
+    const dy = (endY - startY) / linkCount;
+    
+    for (let i = 0; i < linkCount; i++) {
+        const lx = startX + dx * i + dx/2;
+        const ly = startY + dy * i + dy/2;
+        const angle = Math.atan2(dy, dx);
+        const linkW = 18;
+        const linkH = 10;
+        
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(angle);
+        
+        // Chain link glow
+        const chGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+        chGrad.addColorStop(0, 'rgba(0,191,255,0.15)');
+        chGrad.addColorStop(1, 'rgba(0,191,255,0)');
+        ctx.fillStyle = chGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 20, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Link body
+        ctx.beginPath();
+        ctx.roundRect(-linkW/2, -linkH/2, linkW, linkH, linkH/2);
+        const linkGrad = ctx.createLinearGradient(-linkW/2, 0, linkW/2, 0);
+        linkGrad.addColorStop(0, '#0088cc');
+        linkGrad.addColorStop(0.3, '#00bfff');
+        linkGrad.addColorStop(0.5, '#e0f0ff');
+        linkGrad.addColorStop(0.7, '#00bfff');
+        linkGrad.addColorStop(1, '#0088cc');
+        ctx.strokeStyle = linkGrad;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+}
+
+// Left chain
+drawChain(cx - 250, cy + 120, cx - 180, cy + 230, 5);
+// Right chain
+drawChain(cx + 250, cy + 120, cx + 180, cy + 230, 5);
+
+// Chain anchor points (silver)
+[1, -1].forEach(dir => {
+    ctx.beginPath();
+    ctx.arc(cx + dir * 250, cy + 120, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#c0c0c8';
+    ctx.fill();
+    ctx.strokeStyle = '#808890';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+});
+
+// === TEXT ===
+// SENTINEL
+ctx.font = '900 72px "Inter", "DejaVu Sans", sans-serif';
+ctx.textAlign = 'center';
+ctx.shadowColor = '#00ff41';
+ctx.shadowBlur = 20;
+ctx.fillStyle = '#00ff41';
+ctx.fillText('SENTINEL', cx, cy + 370);
+ctx.shadowBlur = 0;
+ctx.fillStyle = '#e0ffe8';
+ctx.fillText('SENTINEL', cx, cy + 370);
+
+// 哨兵
+ctx.font = '900 56px "WenQuanYi Zen Hei", "Noto Sans SC", sans-serif';
+ctx.shadowColor = '#ff2222';
+ctx.shadowBlur = 15;
+ctx.fillStyle = '#ff3333';
+ctx.fillText('哨兵', cx, cy + 440);
+ctx.shadowBlur = 0;
+ctx.fillStyle = '#ff3333';
+ctx.fillText('哨兵', cx, cy + 440);
+
+// Tagline
+ctx.font = '500 17px "Inter", "DejaVu Sans", sans-serif';
+ctx.fillStyle = '#555a65';
+ctx.fillText('PROTECT YOUR MONEY  ·  YOUR TIME  ·  YOUR ATTENTION', cx, cy + 490);
+
+// Decorative lines
+ctx.beginPath();
+ctx.moveTo(cx - 200, cy + 345);
+ctx.lineTo(cx - 50, cy + 345);
+ctx.moveTo(cx + 50, cy + 345);
+ctx.lineTo(cx + 200, cy + 345);
+ctx.strokeStyle = 'rgba(0,255,65,0.25)';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+[[-208, 0], [208, 0]].forEach(([dx]) => {
+    const dy = cy + 345;
+    ctx.beginPath();
+    ctx.moveTo(cx + dx, dy - 5);
+    ctx.lineTo(cx + dx + 5, dy);
+    ctx.lineTo(cx + dx, dy + 5);
+    ctx.lineTo(cx + dx - 5, dy);
+    ctx.closePath();
+    ctx.fillStyle = '#ff3333';
+    ctx.fill();
+});
+
+</script>
+</body>
+</html>

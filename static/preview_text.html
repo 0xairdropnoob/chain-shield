@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { margin: 0; background: #0a0a0f; display: flex; justify-content: center; align-items: center; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="600"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const W = 1200, H = 600;
+const cx = W/2, cy = H/2;
+
+// Background
+ctx.fillStyle = '#0a0a0f';
+ctx.fillRect(0, 0, W, H);
+
+// === CONCEPT 1: CHAIN SHIELD (top) ===
+// Clean, sharp, geometric wordmark
+
+// Top accent line
+ctx.beginPath();
+ctx.moveTo(cx - 280, cy - 140);
+ctx.lineTo(cx + 280, cy - 140);
+const lineGrad = ctx.createLinearGradient(cx - 280, 0, cx + 280, 0);
+lineGrad.addColorStop(0, 'rgba(99,102,241,0)');
+lineGrad.addColorStop(0.2, 'rgba(99,102,241,0.6)');
+lineGrad.addColorStop(0.5, 'rgba(139,92,246,0.8)');
+lineGrad.addColorStop(0.8, 'rgba(99,102,241,0.6)');
+lineGrad.addColorStop(1, 'rgba(99,102,241,0)');
+ctx.strokeStyle = lineGrad;
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Small diamond at center top
+ctx.beginPath();
+ctx.moveTo(cx, cy - 155);
+ctx.lineTo(cx + 8, cy - 145);
+ctx.lineTo(cx, cy - 135);
+ctx.lineTo(cx - 8, cy - 145);
+ctx.closePath();
+ctx.fillStyle = '#8b5cf6';
+ctx.fill();
+
+// CHAIN — large, bold, sharp
+ctx.font = '900 96px "Inter", "DejaVu Sans", sans-serif';
+ctx.textAlign = 'center';
+ctx.letterSpacing = '18px';
+
+// Glow
+ctx.shadowColor = '#6366f1';
+ctx.shadowBlur = 30;
+ctx.fillStyle = '#6366f1';
+ctx.fillText('CHAIN', cx - 110, cy - 50);
+ctx.shadowBlur = 0;
+
+// Main text
+ctx.fillStyle = '#e8eaff';
+ctx.fillText('CHAIN', cx - 110, cy - 50);
+
+// SHIELD — same style
+ctx.shadowColor = '#6366f1';
+ctx.shadowBlur = 30;
+ctx.fillStyle = '#6366f1';
+ctx.fillText('SHIELD', cx + 140, cy - 50);
+ctx.shadowBlur = 0;
+ctx.fillStyle = '#e8eaff';
+ctx.fillText('SHIELD', cx + 140, cy - 50);
+
+// Separator dot
+ctx.beginPath();
+ctx.arc(cx, cy - 50, 5, 0, Math.PI * 2);
+ctx.fillStyle = '#8b5cf6';
+ctx.fill();
+
+// SENTINEL — smaller, letterspaced
+ctx.font = '600 32px "Inter", "DejaVu Sans", sans-serif';
+ctx.shadowColor = '#22c55e';
+ctx.shadowBlur = 15;
+ctx.fillStyle = '#22c55e';
+ctx.fillText('S E N T I N E L', cx, cy + 10);
+ctx.shadowBlur = 0;
+ctx.fillStyle = '#a3e6b8';
+ctx.fillText('S E N T I N E L', cx, cy + 10);
+
+// 哨兵 — red accent
+ctx.font = '900 36px "WenQuanYi Zen Hei", "Noto Sans SC", sans-serif';
+ctx.fillStyle = '#ef4444';
+ctx.fillText('哨兵', cx, cy + 60);
+
+// Bottom accent line
+ctx.beginPath();
+ctx.moveTo(cx - 200, cy + 85);
+ctx.lineTo(cx + 200, cy + 85);
+const lineGrad2 = ctx.createLinearGradient(cx - 200, 0, cx + 200, 0);
+lineGrad2.addColorStop(0, 'rgba(99,102,241,0)');
+lineGrad2.addColorStop(0.3, 'rgba(139,92,246,0.4)');
+lineGrad2.addColorStop(0.5, 'rgba(139,92,246,0.6)');
+lineGrad2.addColorStop(0.7, 'rgba(139,92,246,0.4)');
+lineGrad2.addColorStop(1, 'rgba(99,102,241,0)');
+ctx.strokeStyle = lineGrad2;
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+// Tagline
+ctx.font = '500 14px "Inter", "DejaVu Sans", sans-serif';
+ctx.fillStyle = '#4a4e5a';
+ctx.fillText('TOKEN SAFETY SCANNER', cx, cy + 115);
+
+// Decorative corner brackets
+const bracketSize = 20;
+const bracketOffset = 30;
+// Top-left
+ctx.beginPath();
+ctx.moveTo(cx - 320, cy - 160 + bracketSize);
+ctx.lineTo(cx - 320, cy - 160);
+ctx.lineTo(cx - 320 + bracketSize, cy - 160);
+ctx.strokeStyle = 'rgba(99,102,241,0.4)';
+ctx.lineWidth = 2;
+ctx.stroke();
+// Top-right
+ctx.beginPath();
+ctx.moveTo(cx + 320, cy - 160 + bracketSize);
+ctx.lineTo(cx + 320, cy - 160);
+ctx.lineTo(cx + 320 - bracketSize, cy - 160);
+ctx.stroke();
+// Bottom-left
+ctx.beginPath();
+ctx.moveTo(cx - 320, cy + 140 - bracketSize);
+ctx.lineTo(cx - 320, cy + 140);
+ctx.lineTo(cx - 320 + bracketSize, cy + 140);
+ctx.stroke();
+// Bottom-right
+ctx.beginPath();
+ctx.moveTo(cx + 320, cy + 140 - bracketSize);
+ctx.lineTo(cx + 320, cy + 140);
+ctx.lineTo(cx + 320 - bracketSize, cy + 140);
+ctx.stroke();
+
+</script>
+</body>
+</html>

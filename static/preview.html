@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { margin: 0; background: #0a0e14; display: flex; justify-content: center; align-items: center; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1000" height="1000"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const W = 1000, H = 1000;
+const cx = W/2, cy = H/2 - 50;
+
+// Background
+ctx.fillStyle = '#0a0e14';
+ctx.fillRect(0, 0, W, H);
+
+// Subtle radial gradient bg
+const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 450);
+bgGrad.addColorStop(0, 'rgba(0,255,120,0.03)');
+bgGrad.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = bgGrad;
+ctx.fillRect(0, 0, W, H);
+
+// === HELMET — Clean geometric cyber-knight ===
+function drawHelmet() {
+    ctx.save();
+    
+    // Outer glow
+    for (let i = 8; i > 0; i--) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 340);
+        ctx.lineTo(cx + 200, cy - 240);
+        ctx.lineTo(cx + 260, cy - 80);
+        ctx.lineTo(cx + 240, cy + 60);
+        ctx.lineTo(cx + 160, cy + 180);
+        ctx.lineTo(cx, cy + 260);
+        ctx.lineTo(cx - 160, cy + 180);
+        ctx.lineTo(cx - 240, cy + 60);
+        ctx.lineTo(cx - 260, cy - 80);
+        ctx.lineTo(cx - 200, cy - 240);
+        ctx.closePath();
+        ctx.strokeStyle = `rgba(0,255,120,${0.02 * i})`;
+        ctx.lineWidth = 30 + i * 8;
+        ctx.stroke();
+    }
+    
+    // Main helmet outline
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 320);
+    ctx.lineTo(cx + 180, cy - 230);
+    ctx.lineTo(cx + 240, cy - 80);
+    ctx.lineTo(cx + 230, cy + 50);
+    ctx.lineTo(cx + 150, cy + 170);
+    ctx.lineTo(cx, cy + 240);
+    ctx.lineTo(cx - 150, cy + 170);
+    ctx.lineTo(cx - 230, cy + 50);
+    ctx.lineTo(cx - 240, cy - 80);
+    ctx.lineTo(cx - 180, cy - 230);
+    ctx.closePath();
+    
+    // Fill with dark gradient
+    const helmGrad = ctx.createLinearGradient(cx, cy - 320, cx, cy + 240);
+    helmGrad.addColorStop(0, '#1a1d24');
+    helmGrad.addColorStop(0.5, '#14171e');
+    helmGrad.addColorStop(1, '#0f1218');
+    ctx.fillStyle = helmGrad;
+    ctx.fill();
+    
+    // Border — silver metallic
+    ctx.strokeStyle = '#8a9098';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    
+    // Inner edge highlight
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 310);
+    ctx.lineTo(cx + 170, cy - 225);
+    ctx.lineTo(cx + 230, cy - 80);
+    ctx.lineTo(cx + 222, cy + 45);
+    ctx.lineTo(cx + 145, cy + 162);
+    ctx.lineTo(cx, cy + 230);
+    ctx.lineTo(cx - 145, cy + 162);
+    ctx.lineTo(cx - 222, cy + 45);
+    ctx.lineTo(cx - 230, cy - 80);
+    ctx.lineTo(cx - 170, cy - 225);
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(0,255,120,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // === VISOR PLATE ===
+    ctx.beginPath();
+    ctx.moveTo(cx - 170, cy - 140);
+    ctx.lineTo(cx + 170, cy - 140);
+    ctx.lineTo(cx + 195, cy - 60);
+    ctx.lineTo(cx + 180, cy + 30);
+    ctx.lineTo(cx + 120, cy + 50);
+    ctx.lineTo(cx - 120, cy + 50);
+    ctx.lineTo(cx - 180, cy + 30);
+    ctx.lineTo(cx - 195, cy - 60);
+    ctx.closePath();
+    ctx.fillStyle = '#080a0e';
+    ctx.fill();
+    ctx.strokeStyle = '#4a5060';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // === EYES — Angular glowing ===
+    function drawEye(ex, ey, flip) {
+        const dir = flip ? -1 : 1;
+        
+        // Eye shape (angular trapezoid)
+        const eyePts = [
+            [ex - 75*dir, ey - 10],
+            [ex + 10*dir, ey - 20],
+            [ex + 55*dir, ey - 5],
+            [ex + 50*dir, ey + 12],
+            [ex - 65*dir, ey + 18],
+        ];
+        
+        // Outer glow
+        for (let i = 6; i > 0; i--) {
+            ctx.beginPath();
+            eyePts.forEach((p, j) => {
+                const dx = p[0] - ex, dy = p[1] - ey;
+                const px = ex + dx * (1 + i * 0.015);
+                const py = ey + dy * (1 + i * 0.015);
+                j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            });
+            ctx.closePath();
+            ctx.fillStyle = `rgba(0,255,120,${0.08 * i})`;
+            ctx.fill();
+        }
+        
+        // Main eye
+        ctx.beginPath();
+        eyePts.forEach((p, j) => j === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+        ctx.closePath();
+        ctx.fillStyle = '#00ff78';
+        ctx.fill();
+        
+        // Bright center
+        const coreGrad = ctx.createRadialGradient(ex + 10*dir, ey, 0, ex + 10*dir, ey, 25);
+        coreGrad.addColorStop(0, 'rgba(200,255,220,0.8)');
+        coreGrad.addColorStop(1, 'rgba(0,255,120,0)');
+        ctx.fillStyle = coreGrad;
+        ctx.fill();
+        
+        // White pupil dot
+        ctx.beginPath();
+        ctx.arc(ex + 15*dir, ey, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        
+        // Laser beam
+        ctx.beginPath();
+        ctx.moveTo(ex + 55*dir, ey + 3);
+        ctx.lineTo(ex + 200*dir, ey + 3);
+        const laserGrad = ctx.createLinearGradient(ex + 55*dir, 0, ex + 200*dir, 0);
+        laserGrad.addColorStop(0, 'rgba(0,255,120,0.8)');
+        laserGrad.addColorStop(1, 'rgba(0,255,120,0)');
+        ctx.strokeStyle = laserGrad;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Red tip
+        ctx.beginPath();
+        ctx.moveTo(ex + 200*dir, ey - 6);
+        ctx.lineTo(ex + 215*dir, ey + 3);
+        ctx.lineTo(ex + 200*dir, ey + 12);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+    }
+    
+    drawEye(cx - 20, cy - 60, false);
+    drawEye(cx + 20, cy - 60, true);
+    
+    // === NOSE RIDGE ===
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 140);
+    ctx.lineTo(cx - 3, cy + 30);
+    ctx.moveTo(cx, cy - 140);
+    ctx.lineTo(cx + 3, cy + 30);
+    ctx.strokeStyle = '#5a6070';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // === MOUTH VENTS ===
+    for (let i = 0; i < 6; i++) {
+        const vy = cy + 70 + i * 14;
+        const vw = 90 - i * 10;
+        ctx.beginPath();
+        ctx.moveTo(cx - vw, vy);
+        ctx.lineTo(cx + vw, vy);
+        ctx.strokeStyle = i === 0 ? 'rgba(239,68,68,0.6)' : 'rgba(80,90,100,0.7)';
+        ctx.lineWidth = i === 0 ? 3 : 2;
+        ctx.stroke();
+    }
+    
+    // === CHAIN LINKS on jaw ===
+    function chainLink(x, y, size) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, size, size * 0.55, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,255,120,0.25)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+    }
+    
+    // Right jaw
+    [[190, 140, 14], [200, 168, 13], [195, 192, 12], [178, 212, 11], [155, 226, 10]].forEach(([dx, dy, s]) => {
+        chainLink(cx + dx, cy + dy, s);
+    });
+    // Left jaw
+    [[190, 140, 14], [200, 168, 13], [195, 192, 12], [178, 212, 11], [155, 226, 10]].forEach(([dx, dy, s]) => {
+        chainLink(cx - dx, cy + dy, s);
+    });
+    
+    // === RED CREST on forehead ===
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 350);
+    ctx.lineTo(cx + 20, cy - 315);
+    ctx.lineTo(cx, cy - 290);
+    ctx.lineTo(cx - 20, cy - 315);
+    ctx.closePath();
+    
+    // Glow
+    for (let i = 5; i > 0; i--) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 350 - i*4);
+        ctx.lineTo(cx + 20 + i*3, cy - 315);
+        ctx.lineTo(cx, cy - 290 + i*3);
+        ctx.lineTo(cx - 20 - i*3, cy - 315);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(239,68,68,${0.1 * i})`;
+        ctx.fill();
+    }
+    ctx.fillStyle = '#ef4444';
+    ctx.fill();
+    
+    // === CHEEK ARMOR LINES ===
+    [1, -1].forEach(dir => {
+        ctx.beginPath();
+        ctx.moveTo(cx + dir * 175, cy - 110);
+        ctx.lineTo(cx + dir * 220, cy - 50);
+        ctx.strokeStyle = 'rgba(100,110,120,0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + dir * 180, cy + 10);
+        ctx.lineTo(cx + dir * 225, cy + 55);
+        ctx.stroke();
+    });
+    
+    // === TEMPLE RED ACCENTS ===
+    [1, -1].forEach(dir => {
+        ctx.beginPath();
+        ctx.moveTo(cx + dir * 215, cy - 160);
+        ctx.lineTo(cx + dir * 235, cy - 130);
+        ctx.lineTo(cx + dir * 228, cy - 105);
+        ctx.lineTo(cx + dir * 210, cy - 135);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(239,68,68,0.7)';
+        ctx.fill();
+    });
+    
+    ctx.restore();
+}
+
+// === TEXT ===
+function drawText() {
+    ctx.save();
+    
+    // SENTINEL
+    ctx.font = '900 72px "Inter", "DejaVu Sans", sans-serif';
+    ctx.textAlign = 'center';
+    
+    // Glow
+    ctx.shadowColor = '#00ff78';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = '#00ff78';
+    ctx.fillText('SENTINEL', cx, cy + 360);
+    
+    // Clean text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#e0e4ea';
+    ctx.fillText('SENTINEL', cx, cy + 360);
+    
+    // 哨兵
+    ctx.font = '900 60px "WenQuanYi Zen Hei", "Noto Sans SC", sans-serif';
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#ef4444';
+    ctx.fillText('哨兵', cx, cy + 430);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ef4444';
+    ctx.fillText('哨兵', cx, cy + 430);
+    
+    // Tagline
+    ctx.font = '500 18px "Inter", "DejaVu Sans", sans-serif';
+    ctx.fillStyle = '#555a65';
+    ctx.fillText('PROTECT YOUR MONEY  ·  YOUR TIME  ·  YOUR ATTENTION', cx, cy + 480);
+    
+    // Decorative line
+    ctx.beginPath();
+    ctx.moveTo(cx - 220, cy + 340);
+    ctx.lineTo(cx - 60, cy + 340);
+    ctx.moveTo(cx + 60, cy + 340);
+    ctx.lineTo(cx + 220, cy + 340);
+    ctx.strokeStyle = 'rgba(0,255,120,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Red diamonds at line ends
+    [[-228, 340], [228, 340]].forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.moveTo(cx + dx, cy + dy - 6);
+        ctx.lineTo(cx + dx + 6, cy + dy);
+        ctx.lineTo(cx + dx, cy + dy + 6);
+        ctx.lineTo(cx + dx - 6, cy + dy);
+        ctx.closePath();
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+    });
+    
+    ctx.restore();
+}
+
+drawHelmet();
+drawText();
+</script>
+</body>
+</html>
