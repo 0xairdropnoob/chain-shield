@@ -3,9 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chain Shield — Sentinel</title>
+    <!-- SEO Meta Tags -->
+    <title>Chain Shield — Free Token Safety Scanner | Detect Rugpulls & Honeypots</title>
+    <meta name="description" content="Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains (BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana). Paste any contract address and get a safety report.">
+    <meta name="keywords" content="token scanner, rugpull detector, honeypot checker, crypto safety, blockchain security, token audit, BSC scanner, Ethereum scanner, Solana scanner, web3 security">
+    <meta name="author" content="Sentinel">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chainshieldsentinel.tech/">
+    <meta property="og:title" content="Chain Shield — Free Token Safety Scanner">
+    <meta property="og:description" content="Detect honeypots, rugpulls, and scams across 9 blockchains. Free, instant, no wallet required.">
+    <meta property="og:image" content="https://chainshieldsentinel.tech/og-image.png">
+    <meta property="og:site_name" content="Chain Shield by Sentinel">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chain Shield — Free Token Safety Scanner">
+    <meta name="twitter:description" content="Detect honeypots, rugpulls, and scams across 9 blockchains. Free, instant, no wallet required.">
+    <meta name="twitter:image" content="https://chainshieldsentinel.tech/og-image.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://chainshieldsentinel.tech/">
+    
+    <!-- Plausible Analytics (privacy-friendly) -->
+    <script defer data-domain="chainshieldsentinel.tech" src="https://plausible.io/js/script.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- JSON-LD Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Chain Shield",
+        "url": "https://chainshieldsentinel.tech",
+        "description": "Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains.",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Sentinel",
+            "url": "https://chainshieldsentinel.tech"
+        }
+    }
+    </script>
+
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { background: #0a0a0f; color: #e4e4e7; }
@@ -74,6 +124,40 @@
         .chain-menu::-webkit-scrollbar { width: 6px; }
         .chain-menu::-webkit-scrollbar-track { background: transparent; }
         .chain-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* Contact form */
+        .contact-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 100%;
+            color: #e4e4e7;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .contact-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5); border-color: rgba(99, 102, 241, 0.5); }
+        .contact-input::placeholder { color: #52525b; }
+
+        .send-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+            cursor: pointer;
+        }
+        .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Nav links */
+        .nav-link { 
+            color: #a1a1aa; font-size: 0.875rem; font-weight: 500;
+            transition: color 0.2s; cursor: pointer;
+        }
+        .nav-link:hover { color: #818cf8; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -88,8 +172,14 @@
                     <p class="text-xs text-zinc-500">by Sentinel</p>
                 </div>
             </div>
+            <div class="hidden sm:flex items-center gap-6">
+                <a href="#scanner" class="nav-link">Scanner</a>
+                <a href="#contact-section" class="nav-link">Contact</a>
+                <a href="https://x.com/ChainShieldSn" target="_blank" class="nav-link">Twitter</a>
+                <a href="https://github.com/0xairdropnoob/chain-shield" target="_blank" class="nav-link">GitHub</a>
+            </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs text-zinc-500" id="rateInfo">20 scans/min free</span>
+                <span class="text-xs text-zinc-500 hidden sm:inline" id="rateInfo">20 scans/min free</span>
                 <span class="badge bg-green-500/10 text-green-400 border border-green-500/20">LIVE</span>
             </div>
         </div>
@@ -105,12 +195,12 @@
             </h2>
             <p class="text-zinc-400 max-w-lg mx-auto">
                 Paste any token contract address and get an instant safety report. 
-                Detect honeypots, rugpulls, and scams across 8 chains.
+                Detect honeypots, rugpulls, and scams across 9 chains.
             </p>
         </div>
 
         <!-- Search Box -->
-        <div class="result-card rounded-2xl p-6 mb-8">
+        <div class="result-card rounded-2xl p-6 mb-8" id="scanner">
             <div class="flex flex-col sm:flex-row gap-3">
                 <!-- Chain Dropdown -->
                 <div class="chain-dropdown" id="chainDropdown">
@@ -343,13 +433,95 @@
             <p class="text-zinc-600 text-sm mt-2">Supports 9 chains: BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana</p>
         </div>
 
+        <!-- Features Section -->
+        <div class="mt-16 mb-12">
+            <h3 class="text-xl font-bold text-center mb-8">Why <span class="text-indigo-400">Chain Shield</span>?</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="result-card rounded-xl p-5 text-center">
+                    <div class="text-3xl mb-3">⚡</div>
+                    <h4 class="font-semibold mb-2">Instant Results</h4>
+                    <p class="text-zinc-500 text-sm">Paste address, get report in under 2 seconds. No signup, no wallet connection.</p>
+                </div>
+                <div class="result-card rounded-xl p-5 text-center">
+                    <div class="text-3xl mb-3">🔗</div>
+                    <h4 class="font-semibold mb-2">9 Chains Supported</h4>
+                    <p class="text-zinc-500 text-sm">BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana.</p>
+                </div>
+                <div class="result-card rounded-xl p-5 text-center">
+                    <div class="text-3xl mb-3">🔒</div>
+                    <h4 class="font-semibold mb-2">100% Free</h4>
+                    <p class="text-zinc-500 text-sm">No premium tier. No hidden fees. Every scan is free forever.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div id="contact-section" class="mt-12 mb-8">
+            <div class="result-card rounded-2xl p-8">
+                <h3 class="text-xl font-bold text-center mb-2">Get in Touch</h3>
+                <p class="text-zinc-500 text-sm text-center mb-6">Bug reports, feature requests, partnerships, or just say hello.</p>
+                
+                <form id="contactForm" class="max-w-lg mx-auto space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" name="name" placeholder="Your name" class="contact-input" required>
+                        <input type="email" name="email" placeholder="Your email" class="contact-input" required>
+                    </div>
+                    <input type="text" name="subject" placeholder="Subject" class="contact-input" required>
+                    <textarea name="message" rows="4" placeholder="Your message..." class="contact-input" required></textarea>
+                    <div class="text-center">
+                        <button type="submit" class="send-btn" id="contactSubmitBtn">
+                            ✉️ Send Message
+                        </button>
+                        <p class="text-zinc-600 text-xs mt-2">Messages are sent to info@chainshieldsentinel.tech</p>
+                    </div>
+                    <div id="contactSuccess" class="hidden text-center py-4">
+                        <p class="text-green-400 font-semibold">✅ Message sent! We'll get back to you soon.</p>
+                    </div>
+                    <div id="contactError" class="hidden text-center py-4">
+                        <p class="text-red-400 font-semibold">❌ Failed to send. Please email us directly at info@chainshieldsentinel.tech</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-white/5 mt-20">
-        <div class="max-w-4xl mx-auto px-6 py-6 text-center text-zinc-600 text-sm">
-            <p>🛡️ Chain Shield — Part of the <strong>Sentinel</strong> Suite</p>
-            <p class="mt-1 text-xs text-zinc-700">Free to use. No wallet connection required. 8 chains supported.</p>
+    <footer class="border-t border-white/5 mt-10">
+        <div class="max-w-4xl mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
+                <!-- Brand -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm">🛡️</div>
+                        <span class="font-bold">Chain Shield</span>
+                    </div>
+                    <p class="text-zinc-500 text-xs">Part of the Sentinel suite. Free token safety scanner for the Web3 community.</p>
+                </div>
+                <!-- Links -->
+                <div>
+                    <h4 class="font-semibold mb-3 text-zinc-300">Links</h4>
+                    <ul class="space-y-2 text-zinc-500 text-xs">
+                        <li><a href="#scanner" class="hover:text-indigo-400 transition">Scanner</a></li>
+                        <li><a href="#contact-section" class="hover:text-indigo-400 transition">Contact</a></li>
+                        <li><a href="https://x.com/ChainShieldSn" target="_blank" class="hover:text-indigo-400 transition">Twitter / X</a></li>
+                        <li><a href="https://github.com/0xairdropnoob/chain-shield" target="_blank" class="hover:text-indigo-400 transition">GitHub</a></li>
+                    </ul>
+                </div>
+                <!-- Contact -->
+                <div>
+                    <h4 class="font-semibold mb-3 text-zinc-300">Contact & Support</h4>
+                    <ul class="space-y-2 text-zinc-500 text-xs">
+                        <li>📧 <a href="mailto:info@chainshieldsentinel.tech" class="hover:text-indigo-400 transition">info@chainshieldsentinel.tech</a></li>
+                        <li>🐦 <a href="https://x.com/ChainShieldSn" target="_blank" class="hover:text-indigo-400 transition">@ChainShieldSn</a></li>
+                        <li>🐛 <a href="https://github.com/0xairdropnoob/chain-shield/issues" target="_blank" class="hover:text-indigo-400 transition">Report Bug / Request Feature</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-white/5 mt-6 pt-4 text-center text-zinc-700 text-xs">
+                <p>🛡️ Chain Shield — Free & open source. No wallet connection required. 9 chains supported.</p>
+                <p class="mt-1">&copy; 2025 Sentinel. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
@@ -532,6 +704,44 @@
             if (n >= 1e3) return (n/1e3).toFixed(2) + 'K';
             return n.toFixed(6);
         }
+
+        // Contact form
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('contactSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+            
+            const form = e.target;
+            const data = new FormData(form);
+            
+            try {
+                const resp = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: data.get('name'),
+                        email: data.get('email'),
+                        subject: data.get('subject'),
+                        message: data.get('message')
+                    })
+                });
+                
+                if (resp.ok) {
+                    document.getElementById('contactSuccess').classList.remove('hidden');
+                    document.getElementById('contactError').classList.add('hidden');
+                    form.reset();
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (err) {
+                document.getElementById('contactError').classList.remove('hidden');
+                document.getElementById('contactSuccess').classList.add('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✉️ Send Message';
+            }
+        });
     </script>
 
 </body>

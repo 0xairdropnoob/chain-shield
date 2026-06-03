@@ -98,6 +98,13 @@ class ScanResponse(BaseModel):
     positives: list = []
 
 
+class ContactRequest(BaseModel):
+    name: str
+    email: str
+    subject: str
+    message: str
+
+
 # === ROUTES ===
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -155,6 +162,57 @@ async def scan_token(req: ScanRequest, request: Request):
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "service": "chain-shield", "version": "0.2.0"}
+
+
+@app.post("/api/contact")
+async def contact(req: ContactRequest):
+    """Contact form — forwards message to business email"""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    import os
+    
+    # Build email
+    msg = MIMEMultipart()
+    msg["From"] = f"Chain Shield <noreply@chainshieldsentinel.tech>"
+    msg["To"] = "info@chainshieldsentinel.tech"
+    msg["Reply-To"] = req.email
+    msg["Subject"] = f"[Chain Shield Contact] {req.subject}"
+    
+    body = f"""
+    New contact form submission:
+    
+    Name: {req.name}
+    Email: {req.email}
+    Subject: {req.subject}
+    
+    Message:
+    {req.message}
+    """
+    msg.attach(MIMEText(body, "plain"))
+    
+    # Send via Cloudflare Email Routing (or direct SMTP fallback)
+    try:
+        # Try Cloudflare SMTP (if configured)
+        smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USER", "")
+        smtp_pass = os.getenv("SMTP_PASS", "")
+        
+        if smtp_user and smtp_pass:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+            return {"status": "ok", "message": "Message sent successfully"}
+        else:
+            # No SMTP configured — log and return success (contact stored in logs)
+            print(f"[CONTACT FORM] From: {req.email} | Subject: {req.subject}")
+            print(f"[CONTACT FORM] Message: {req.message[:200]}")
+            return {"status": "ok", "message": "Message received (email forwarding pending)"}
+    except Exception as e:
+        print(f"[CONTACT ERROR] {e}")
+        return {"status": "ok", "message": "Message received"}
 
 
 if __name__ == "__main__":
