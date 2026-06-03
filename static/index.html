@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain Shield — Sentinel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0a0a0f; color: #e4e4e7; }
+        
+        .glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+        .glow-yellow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        
+        .score-ring {
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900;
+            transition: all 0.5s ease;
+        }
+        
+        .scan-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transition: all 0.3s ease;
+        }
+        .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); }
+        .scan-btn:active { transform: translateY(0); }
+        
+        .result-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.4s ease;
+        }
+        
+        .warning-item { border-left: 3px solid #ef4444; }
+        .positive-item { border-left: 3px solid #22c55e; }
+        
+        .loading-pulse { animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
+        .input-glow:focus { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5); }
+        
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 4px 12px; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        
+        /* Custom chain dropdown */
+        .chain-dropdown { position: relative; }
+        .chain-menu {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 8px; z-index: 50;
+            max-height: 320px; overflow-y: auto;
+            display: none;
+        }
+        .chain-menu.open { display: block; }
+        .chain-option {
+            padding: 10px 12px; border-radius: 8px; cursor: pointer;
+            transition: all 0.15s; display: flex; align-items: center; gap: 10px;
+        }
+        .chain-option:hover { background: rgba(99, 102, 241, 0.15); }
+        .chain-option.selected { background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.3); }
+        
+        /* Scrollbar for chain menu */
+        .chain-menu::-webkit-scrollbar { width: 6px; }
+        .chain-menu::-webkit-scrollbar-track { background: transparent; }
+        .chain-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="border-b border-white/5 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-lg">🛡️</div>
+                <div>
+                    <h1 class="text-lg font-bold">Chain Shield</h1>
+                    <p class="text-xs text-zinc-500">by Sentinel</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-zinc-500" id="rateInfo">20 scans/min free</span>
+                <span class="badge bg-green-500/10 text-green-400 border border-green-500/20">LIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-6 py-10">
+        
+        <!-- Hero -->
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-black mb-3">
+                Scan Before You <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Buy</span>
+            </h2>
+            <p class="text-zinc-400 max-w-lg mx-auto">
+                Paste any token contract address and get an instant safety report. 
+                Detect honeypots, rugpulls, and scams across 8 chains.
+            </p>
+        </div>
+
+        <!-- Search Box -->
+        <div class="result-card rounded-2xl p-6 mb-8">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <!-- Chain Dropdown -->
+                <div class="chain-dropdown" id="chainDropdown">
+                    <button 
+                        onclick="toggleChainMenu()" 
+                        id="chainSelector"
+                        class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm hover:border-white/20 transition-all min-w-[160px] justify-between"
+                    >
+                        <span id="chainLabel">🟡 BNB Chain</span>
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="chain-menu" id="chainMenu">
+                        <div class="chain-option selected" data-chain="bsc" onclick="selectChain('bsc', '🟡 BNB Chain')">
+                            <span class="text-lg">🟡</span>
+                            <div>
+                                <div class="font-medium text-sm">BNB Chain</div>
+                                <div class="text-xs text-zinc-500">BNB • Low fees</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="eth" onclick="selectChain('eth', '🔷 Ethereum')">
+                            <span class="text-lg">🔷</span>
+                            <div>
+                                <div class="font-medium text-sm">Ethereum</div>
+                                <div class="text-xs text-zinc-500">ETH • Most liquid</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="base" onclick="selectChain('base', '🔵 Base')">
+                            <span class="text-lg">🔵</span>
+                            <div>
+                                <div class="font-medium text-sm">Base</div>
+                                <div class="text-xs text-zinc-500">ETH • Coinbase L2</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="arbitrum" onclick="selectChain('arbitrum', '🌀 Arbitrum')">
+                            <span class="text-lg">🌀</span>
+                            <div>
+                                <div class="font-medium text-sm">Arbitrum</div>
+                                <div class="text-xs text-zinc-500">ETH • Fast & cheap</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="polygon" onclick="selectChain('polygon', '🟣 Polygon')">
+                            <span class="text-lg">🟣</span>
+                            <div>
+                                <div class="font-medium text-sm">Polygon</div>
+                                <div class="text-xs text-zinc-500">POL • Scaling</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="avalanche" onclick="selectChain('avalanche', '🔴 Avalanche')">
+                            <span class="text-lg">🔴</span>
+                            <div>
+                                <div class="font-medium text-sm">Avalanche</div>
+                                <div class="text-xs text-zinc-500">AVAX • Subnets</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="fantom" onclick="selectChain('fantom', '👻 Fantom')">
+                            <span class="text-lg">👻</span>
+                            <div>
+                                <div class="font-medium text-sm">Fantom</div>
+                                <div class="text-xs text-zinc-500">FTM • Fast finality</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="optimism" onclick="selectChain('optimism', '🔴 Optimism')">
+                            <span class="text-lg">🔴</span>
+                            <div>
+                                <div class="font-medium text-sm">Optimism</div>
+                                <div class="text-xs text-zinc-500">ETH • OP Stack</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="solana" onclick="selectChain('solana', '🟣 Solana')">
+                            <span class="text-lg">🟣</span>
+                            <div>
+                                <div class="font-medium text-sm">Solana</div>
+                                <div class="text-xs text-zinc-500">SOL • Fast & cheap</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 relative">
+                    <input 
+                        type="text" 
+                        id="tokenAddress"
+                        placeholder="Paste contract address (0x... or Solana address)"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm placeholder-zinc-500 focus:outline-none input-glow transition-all"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button onclick="clearInput()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 hidden" id="clearBtn">✕</button>
+                </div>
+                <button onclick="scanToken()" id="scanBtn" class="scan-btn px-8 py-4 rounded-xl font-semibold text-white text-sm whitespace-nowrap">
+                    🛡️ Scan Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden text-center py-16">
+            <div class="inline-block w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-zinc-400 loading-pulse">Scanning token across multiple security databases...</p>
+            <p class="text-zinc-600 text-sm mt-2">Checking GoPlus, DexScreener, and contract data</p>
+        </div>
+
+        <!-- Rate Limit Error -->
+        <div id="rateLimitError" class="hidden result-card rounded-2xl p-6 mb-6 border-red-500/30 fade-in">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">⏱️</span>
+                <div>
+                    <p class="font-semibold text-red-400">Rate Limit Exceeded</p>
+                    <p class="text-sm text-zinc-400" id="rateLimitMsg">You've used all 20 scans this minute. Please wait before scanning again.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden">
+            
+            <!-- Score Card -->
+            <div class="result-card rounded-2xl p-8 mb-6 fade-in" id="scoreCard">
+                <div class="flex flex-col sm:flex-row items-center gap-8">
+                    <div class="score-ring" id="scoreRing">
+                        <span id="scoreValue">--</span>
+                    </div>
+                    
+                    <div class="flex-1 text-center sm:text-left">
+                        <div class="flex items-center gap-3 justify-center sm:justify-start mb-2">
+                            <h3 class="text-2xl font-bold" id="tokenName">Token Name</h3>
+                            <span class="badge" id="riskBadge">--</span>
+                            <span class="badge bg-zinc-800 text-zinc-300 border border-zinc-700 text-xs" id="chainBadge">🟡 BSC</span>
+                        </div>
+                        <p class="text-zinc-400 font-mono text-sm mb-1" id="tokenAddressDisplay">0x...</p>
+                        <p class="text-zinc-500 text-sm" id="tokenSymbol">SYMBOL</p>
+                        
+                        <div class="flex flex-wrap gap-4 mt-4 text-sm">
+                            <div>
+                                <span class="text-zinc-500">Price:</span>
+                                <span class="text-white font-semibold" id="tokenPrice">$0.00</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">MC:</span>
+                                <span class="text-white font-semibold" id="tokenMC">$0</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">24h Vol:</span>
+                                <span class="text-white font-semibold" id="tokenVol">$0</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">Holders:</span>
+                                <span class="text-white font-semibold" id="tokenHolders">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                
+                <div class="result-card rounded-xl p-5 fade-in" style="animation-delay: 0.1s">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-2xl">🍯</span>
+                        <span class="font-semibold">Honeypot Detection</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Is Honeypot</span>
+                            <span id="isHoneypot" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Can Sell</span>
+                            <span id="canSell" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Buy Tax</span>
+                            <span id="buyTax" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Sell Tax</span>
+                            <span id="sellTax" class="font-semibold">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card rounded-xl p-5 fade-in" style="animation-delay: 0.15s">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-2xl">👤</span>
+                        <span class="font-semibold">Ownership</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Renounced</span>
+                            <span id="ownerRenounced" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Verified Source</span>
+                            <span id="isVerified" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Proxy Contract</span>
+                            <span id="isProxy" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Liquidity Locked</span>
+                            <span id="liqLocked" class="font-semibold">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis -->
+            <div class="result-card rounded-2xl p-6 fade-in" style="animation-delay: 0.2s">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold">Analysis</h4>
+                    <div class="flex items-center gap-2" id="dataSources">
+                        <span class="text-xs text-zinc-500">Data:</span>
+                    </div>
+                </div>
+                <div id="analysisList" class="space-y-3"></div>
+            </div>
+            
+            <p class="text-center text-zinc-600 text-xs mt-6">
+                ⚠️ This is not financial advice. Always do your own research. 
+                Data sourced from GoPlus Security & DexScreener.
+            </p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-16">
+            <div class="text-6xl mb-4">🔍</div>
+            <p class="text-zinc-500">Enter a contract address above to scan</p>
+            <p class="text-zinc-600 text-sm mt-2">Supports 9 chains: BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 mt-20">
+        <div class="max-w-4xl mx-auto px-6 py-6 text-center text-zinc-600 text-sm">
+            <p>🛡️ Chain Shield — Part of the <strong>Sentinel</strong> Suite</p>
+            <p class="mt-1 text-xs text-zinc-700">Free to use. No wallet connection required. 8 chains supported.</p>
+        </div>
+    </footer>
+
+    <script>
+        let selectedChain = 'bsc';
+        let scanning = false;
+
+        function toggleChainMenu() {
+            const menu = document.getElementById('chainMenu');
+            menu.classList.toggle('open');
+        }
+
+        function selectChain(chain, label) {
+            selectedChain = chain;
+            document.getElementById('chainLabel').textContent = label;
+            document.querySelectorAll('.chain-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.chain === chain) opt.classList.add('selected');
+            });
+            document.getElementById('chainMenu').classList.remove('open');
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.chain-dropdown')) {
+                document.getElementById('chainMenu').classList.remove('open');
+            }
+        });
+
+        function clearInput() {
+            document.getElementById('tokenAddress').value = '';
+            document.getElementById('clearBtn').classList.add('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('rateLimitError').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        document.getElementById('tokenAddress').addEventListener('input', (e) => {
+            document.getElementById('clearBtn').classList.toggle('hidden', !e.target.value.length);
+        });
+
+        document.getElementById('tokenAddress').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !scanning) scanToken();
+        });
+
+        async function scanToken() {
+            const address = document.getElementById('tokenAddress').value.trim();
+            if (!address || scanning) return;
+            
+            scanning = true;
+            
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('rateLimitError').classList.add('hidden');
+            document.getElementById('scanBtn').textContent = '⏳ Scanning...';
+            
+            try {
+                const resp = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, chain: selectedChain })
+                });
+                
+                if (resp.status === 429) {
+                    const err = await resp.json();
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('rateLimitError').classList.remove('hidden');
+                    document.getElementById('rateLimitMsg').textContent = err.detail || 'Rate limit exceeded. Try again in a minute.';
+                    return;
+                }
+                
+                const data = await resp.json();
+                displayResults(data);
+                
+            } catch (err) {
+                console.error('Scan failed:', err);
+                alert('Scan failed. Please check the address and try again.');
+            } finally {
+                scanning = false;
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('scanBtn').textContent = '🛡️ Scan Now';
+            }
+        }
+
+        function displayResults(data) {
+            const score = data.safety_score;
+            const scoreValue = document.getElementById('scoreValue');
+            const scoreRing = document.getElementById('scoreRing');
+            scoreValue.textContent = score;
+            
+            let ringColor, glowClass, textColor;
+            if (data.risk_level === 'UNKNOWN') { ringColor = 'border-zinc-500 bg-zinc-500/10'; glowClass = ''; textColor = 'text-zinc-400'; }
+            else if (score >= 80) { ringColor = 'border-green-500 bg-green-500/10'; glowClass = 'glow-green'; textColor = 'text-green-400'; }
+            else if (score >= 60) { ringColor = 'border-yellow-500 bg-yellow-500/10'; glowClass = 'glow-yellow'; textColor = 'text-yellow-400'; }
+            else { ringColor = 'border-red-500 bg-red-500/10'; glowClass = 'glow-red'; textColor = 'text-red-400'; }
+            
+            scoreRing.className = `score-ring border-4 ${ringColor} ${glowClass}`;
+            scoreValue.className = textColor;
+            scoreValue.textContent = data.risk_level === 'UNKNOWN' ? '?' : score;
+            
+            // Risk badge
+            const riskBadge = document.getElementById('riskBadge');
+            riskBadge.textContent = data.risk_level;
+            riskBadge.className = data.risk_level === 'UNKNOWN' ? 'badge bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                : data.risk_level === 'LOW' ? 'badge bg-green-500/10 text-green-400 border border-green-500/20'
+                : data.risk_level === 'MEDIUM' ? 'badge bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                : 'badge bg-red-500/10 text-red-400 border border-red-500/20';
+            
+            // Chain badge
+            const chainNames = { bsc:'🟡 BSC', eth:'🔷 ETH', base:'🔵 Base', arbitrum:'🌀 ARB', polygon:'🟣 POLY', avalanche:'🔴 AVAX', fantom:'👻 FTM', optimism:'🔴 OP', solana:'🟣 SOL' };
+            document.getElementById('chainBadge').textContent = chainNames[data.chain] || data.chain;
+            
+            // Token info
+            document.getElementById('tokenName').textContent = data.name || 'Unknown Token';
+            document.getElementById('tokenAddressDisplay').textContent = data.address;
+            document.getElementById('tokenSymbol').textContent = data.symbol || '???';
+            document.getElementById('tokenPrice').textContent = '$' + formatNum(data.price_usd);
+            document.getElementById('tokenMC').textContent = '$' + formatNum(data.market_cap);
+            document.getElementById('tokenVol').textContent = '$' + formatNum(data.volume_24h);
+            document.getElementById('tokenHolders').textContent = data.holders?.toLocaleString() || '0';
+            
+            // Honeypot
+            document.getElementById('isHoneypot').textContent = data.is_honeypot ? '⚠️ YES' : '✅ No';
+            document.getElementById('isHoneypot').className = `font-semibold ${data.is_honeypot ? 'text-red-400' : 'text-green-400'}`;
+            
+            document.getElementById('canSell').textContent = data.can_sell === false ? '🚫 No' : '✅ Yes';
+            document.getElementById('canSell').className = `font-semibold ${data.can_sell === false ? 'text-red-400' : 'text-green-400'}`;
+            
+            document.getElementById('buyTax').textContent = (data.buy_tax * 100).toFixed(1) + '%';
+            document.getElementById('buyTax').className = `font-semibold ${data.buy_tax > 0.1 ? 'text-red-400' : 'text-green-400'}`;
+            
+            document.getElementById('sellTax').textContent = (data.sell_tax * 100).toFixed(1) + '%';
+            document.getElementById('sellTax').className = `font-semibold ${data.sell_tax > 0.1 ? 'text-red-400' : 'text-green-400'}`;
+            
+            // Ownership
+            document.getElementById('ownerRenounced').textContent = data.owner_renounced ? '✅ Yes' : '⚠️ No';
+            document.getElementById('ownerRenounced').className = `font-semibold ${data.owner_renounced ? 'text-green-400' : 'text-yellow-400'}`;
+            
+            document.getElementById('isVerified').textContent = data.is_verified ? '✅ Yes' : '⚠️ No';
+            document.getElementById('isVerified').className = `font-semibold ${data.is_verified ? 'text-green-400' : 'text-yellow-400'}`;
+            
+            document.getElementById('isProxy').textContent = data.is_proxy ? '⚠️ Yes' : '✅ No';
+            document.getElementById('isProxy').className = `font-semibold ${data.is_proxy ? 'text-yellow-400' : 'text-green-400'}`;
+            
+            document.getElementById('liqLocked').textContent = data.liquidity_locked ? '✅ Yes' : '⚠️ Unknown';
+            document.getElementById('liqLocked').className = `font-semibold ${data.liquidity_locked ? 'text-green-400' : 'text-yellow-400'}`;
+            
+            // Analysis
+            const analysisList = document.getElementById('analysisList');
+            analysisList.innerHTML = '';
+            data.warnings.forEach(w => {
+                analysisList.innerHTML += `<div class="warning-item bg-red-500/5 rounded-lg px-4 py-3 text-sm text-red-300">${w}</div>`;
+            });
+            data.positives.forEach(p => {
+                analysisList.innerHTML += `<div class="positive-item bg-green-500/5 rounded-lg px-4 py-3 text-sm text-green-300">${p}</div>`;
+            });
+            if (!data.warnings.length && !data.positives.length) {
+                analysisList.innerHTML = '<div class="text-zinc-500 text-sm">No specific indicators found. Proceed with caution.</div>';
+            }
+            
+            // Data sources
+            const dataSources = document.getElementById('dataSources');
+            dataSources.innerHTML = '<span class="text-xs text-zinc-500">Data:</span>';
+            if (data.data_sources && data.data_sources.length > 0) {
+                data.data_sources.forEach(src => {
+                    dataSources.innerHTML += `<span class="badge bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs">${src}</span>`;
+                });
+            } else {
+                dataSources.innerHTML += '<span class="badge bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-xs">On-chain only</span>';
+            }
+            
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function formatNum(n) {
+            if (!n || n === 0) return '0';
+            if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return (n/1e3).toFixed(2) + 'K';
+            return n.toFixed(6);
+        }
+    </script>
+
+</body>
+</html>
