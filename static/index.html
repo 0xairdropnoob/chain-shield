@@ -1,501 +1,749 @@
-     1|<!DOCTYPE html>
-     2|<html lang="en">
-     3|<head>
-     4|    <meta charset="UTF-8">
-     5|    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     6|    <!-- SEO Meta Tags -->
-     7|    <title>Chain Sentinel — Free Token Safety Scanner | Detect Rugpulls & Honeypots</title>
-     8|    <meta name="description" content="Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains (BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana). Paste any contract address and get a safety report.">
-     9|    <meta name="keywords" content="token scanner, rugpull detector, honeypot checker, crypto safety, blockchain security, token audit, BSC scanner, Ethereum scanner, Solana scanner, web3 security">
-    10|    <meta name="author" content="Sentinel">
-    11|    <meta name="robots" content="index, follow">
-    12|    
-    13|    <!-- Open Graph / Social Media -->
-    14|    <meta property="og:type" content="website">
-    15|    <meta property="og:url" content="https://chainshieldsentinel.tech/">
-    16|    <meta property="og:title" content="Chain Sentinel — Free Token Safety Scanner">
-    17|    <meta property="og:description" content="Detect honeypots, rugpulls, and scams across 9 blockchains. Free, instant, no wallet required.">
-    18|    <meta property="og:image" content="https://chainshieldsentinel.tech/og-image.png">
-    19|    <meta property="og:site_name" content="Chain Sentinel by Sentinel">
-    20|    
-    21|    <!-- Twitter Card -->
-    22|    <meta name="twitter:card" content="summary_large_image">
-    23|    <meta name="twitter:title" content="Chain Sentinel — Free Token Safety Scanner">
-    24|    <meta name="twitter:description" content="Detect honeypots, rugpulls, and scams across 9 blockchains. Free, instant, no wallet required.">
-    25|    <meta name="twitter:image" content="https://chainshieldsentinel.tech/og-image.png">
-    26|    
-    27|    <!-- Canonical URL -->
-    28|    <link rel="canonical" href="https://chainshieldsentinel.tech/">
-    29|    
-    30|    <!-- Plausible Analytics (privacy-friendly) -->
-    31|    <script defer data-domain="chainshieldsentinel.tech" src="https://plausible.io/js/script.js"></script>
-    32|
-    33|    <script src="https://cdn.tailwindcss.com"></script>
-    34|    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    35|    
-    36|    <!-- JSON-LD Structured Data for SEO -->
-    37|    <script type="application/ld+json">
-    38|    {
-    39|        "@context": "https://schema.org",
-    40|        "@type": "WebApplication",
-    41|        "name": "Chain Sentinel",
-    42|        "url": "https://chainshieldsentinel.tech",
-    43|        "description": "Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains.",
-    44|        "applicationCategory": "SecurityApplication",
-    45|        "operatingSystem": "Web",
-    46|        "offers": {
-    47|            "@type": "Offer",
-    48|            "price": "0",
-    49|            "priceCurrency": "USD"
-    50|        },
-    51|        "author": {
-    52|            "@type": "Organization",
-    53|            "name": "Sentinel",
-    54|            "url": "https://chainshieldsentinel.tech"
-    55|        }
-    56|    }
-    57|    </script>
-    58|
-    59|    <style>
-    60|        * { font-family: 'Inter', sans-serif; }
-    61|        body { background: #0a0a0f; color: #e4e4e7; }
-    62|        
-    63|        .glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-    64|        .glow-yellow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
-    65|        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
-    66|        
-    67|        .score-ring {
-    68|            width: 140px; height: 140px;
-    69|            border-radius: 50%;
-    70|            display: flex; align-items: center; justify-content: center;
-    71|            font-size: 2.5rem; font-weight: 900;
-    72|            transition: all 0.5s ease;
-    73|        }
-    74|        
-    75|        .scan-btn {
-    76|            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    77|            transition: all 0.3s ease;
-    78|        }
-    79|        .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); }
-    80|        .scan-btn:active { transform: translateY(0); }
-    81|        
-    82|        .result-card {
-    83|            background: rgba(255,255,255,0.03);
-    84|            border: 1px solid rgba(255,255,255,0.08);
-    85|            transition: all 0.4s ease;
-    86|        }
-    87|        
-    88|        .warning-item { border-left: 3px solid #ef4444; }
-    89|        .positive-item { border-left: 3px solid #22c55e; }
-    90|        
-    91|        .loading-pulse { animation: pulse 1.5s ease-in-out infinite; }
-    92|        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    93|        
-    94|        .input-glow:focus { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5); }
-    95|        
-    96|        .fade-in { animation: fadeIn 0.5s ease forwards; }
-    97|        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    98|        
-    99|        .badge {
-   100|            display: inline-flex; align-items: center;
-   101|            padding: 4px 12px; border-radius: 9999px;
-   102|            font-size: 0.75rem; font-weight: 600;
-   103|            text-transform: uppercase; letter-spacing: 0.05em;
-   104|        }
-   105|        
-   106|        /* Custom chain dropdown */
-   107|        .chain-dropdown { position: relative; }
-   108|        .chain-menu {
-   109|            position: absolute; top: 100%; left: 0; right: 0;
-   110|            background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
-   111|            border-radius: 12px; padding: 8px; z-index: 50;
-   112|            max-height: 320px; overflow-y: auto;
-   113|            display: none;
-   114|        }
-   115|        .chain-menu.open { display: block; }
-   116|        .chain-option {
-   117|            padding: 10px 12px; border-radius: 8px; cursor: pointer;
-   118|            transition: all 0.15s; display: flex; align-items: center; gap: 10px;
-   119|        }
-   120|        .chain-option:hover { background: rgba(99, 102, 241, 0.15); }
-   121|        .chain-option.selected { background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.3); }
-   122|        
-   123|        /* Scrollbar for chain menu */
-   124|        .chain-menu::-webkit-scrollbar { width: 6px; }
-   125|        .chain-menu::-webkit-scrollbar-track { background: transparent; }
-   126|        .chain-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-   127|
-   128|        /* Contact form */
-   129|        .contact-input {
-   130|            background: rgba(255,255,255,0.05);
-   131|            border: 1px solid rgba(255,255,255,0.1);
-   132|            border-radius: 12px;
-   133|            padding: 12px 16px;
-   134|            width: 100%;
-   135|            color: #e4e4e7;
-   136|            font-size: 0.875rem;
-   137|            transition: all 0.3s ease;
-   138|        }
-   139|        .contact-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5); border-color: rgba(99, 102, 241, 0.5); }
-   140|        .contact-input::placeholder { color: #52525b; }
-   141|
-   142|        .send-btn {
-   143|            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-   144|            transition: all 0.3s ease;
-   145|            border-radius: 12px;
-   146|            padding: 12px 24px;
-   147|            font-weight: 600;
-   148|            font-size: 0.875rem;
-   149|            color: white;
-   150|            cursor: pointer;
-   151|        }
-   152|        .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
-   153|        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-   154|
-   155|        /* Nav links */
-   156|        .nav-link { 
-   157|            color: #a1a1aa; font-size: 0.875rem; font-weight: 500;
-   158|            transition: color 0.2s; cursor: pointer;
-   159|        }
-   160|        .nav-link:hover { color: #818cf8; }
-   161|    </style>
-   162|</head>
-   163|<body class="min-h-screen">
-   164|
-   165|    <!-- Header -->
-   166|    <header class="border-b border-white/5 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
-   167|        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-   168|            <div class="flex items-center gap-3">
-   169|                <img src="/static/logo_header.png" alt="Chain Sentinel" class="w-10 h-10">
-   170|                <div>
-   171|                    <h1 class="text-lg font-bold">Chain Sentinel</h1>
-   172|                    <p class="text-xs text-zinc-500">by Sentinel</p>
-   173|                </div>
-   174|            </div>
-   175|            <div class="hidden sm:flex items-center gap-6">
-   176|                <a href="#scanner" class="nav-link">Scanner</a>
-   177|                <a href="#contact-section" class="nav-link">Contact</a>
-   178|                <a href="https://x.com/ChainShieldSn" target="_blank" class="nav-link">Twitter</a>
-   179|                <a href="https://github.com/0xairdropnoob/chain-shield" target="_blank" class="nav-link">GitHub</a>
-   180|            </div>
-   181|            <div class="flex items-center gap-3">
-   182|                <span class="text-xs text-zinc-500 hidden sm:inline" id="rateInfo">20 scans/min free</span>
-   183|                <span class="badge bg-green-500/10 text-green-400 border border-green-500/20">LIVE</span>
-   184|            </div>
-   185|        </div>
-   186|    </header>
-   187|
-   188|    <!-- Main Content -->
-   189|    <main class="max-w-4xl mx-auto px-6 py-10">
-   190|        
-   191|        <!-- Hero -->
-   192|        <div class="text-center mb-10">
-   193|            <h2 class="text-3xl font-black mb-3">
-   194|                Scan Before You <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Buy</span>
-   195|            </h2>
-   196|            <p class="text-zinc-400 max-w-lg mx-auto">
-   197|                Paste any token contract address and get an instant safety report. 
-   198|                Detect honeypots, rugpulls, and scams across 9 chains.
-   199|            </p>
-   200|        </div>
-   201|
-   202|        <!-- Search Box -->
-   203|        <div class="result-card rounded-2xl p-6 mb-8" id="scanner">
-   204|            <div class="flex flex-col sm:flex-row gap-3">
-   205|                <!-- Chain Dropdown -->
-   206|                <div class="chain-dropdown" id="chainDropdown">
-   207|                    <button 
-   208|                        onclick="toggleChainMenu()" 
-   209|                        id="chainSelector"
-   210|                        class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm hover:border-white/20 transition-all min-w-[160px] justify-between"
-   211|                    >
-   212|                        <span id="chainLabel">🟡 BNB Chain</span>
-   213|                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-   214|                    </button>
-   215|                    <div class="chain-menu" id="chainMenu">
-   216|                        <div class="chain-option selected" data-chain="bsc" onclick="selectChain('bsc', '🟡 BNB Chain')">
-   217|                            <span class="text-lg">🟡</span>
-   218|                            <div>
-   219|                                <div class="font-medium text-sm">BNB Chain</div>
-   220|                                <div class="text-xs text-zinc-500">BNB • Low fees</div>
-   221|                            </div>
-   222|                        </div>
-   223|                        <div class="chain-option" data-chain="eth" onclick="selectChain('eth', '🔷 Ethereum')">
-   224|                            <span class="text-lg">🔷</span>
-   225|                            <div>
-   226|                                <div class="font-medium text-sm">Ethereum</div>
-   227|                                <div class="text-xs text-zinc-500">ETH • Most liquid</div>
-   228|                            </div>
-   229|                        </div>
-   230|                        <div class="chain-option" data-chain="base" onclick="selectChain('base', '🔵 Base')">
-   231|                            <span class="text-lg">🔵</span>
-   232|                            <div>
-   233|                                <div class="font-medium text-sm">Base</div>
-   234|                                <div class="text-xs text-zinc-500">ETH • Coinbase L2</div>
-   235|                            </div>
-   236|                        </div>
-   237|                        <div class="chain-option" data-chain="arbitrum" onclick="selectChain('arbitrum', '🌀 Arbitrum')">
-   238|                            <span class="text-lg">🌀</span>
-   239|                            <div>
-   240|                                <div class="font-medium text-sm">Arbitrum</div>
-   241|                                <div class="text-xs text-zinc-500">ETH • Fast & cheap</div>
-   242|                            </div>
-   243|                        </div>
-   244|                        <div class="chain-option" data-chain="polygon" onclick="selectChain('polygon', '🟣 Polygon')">
-   245|                            <span class="text-lg">🟣</span>
-   246|                            <div>
-   247|                                <div class="font-medium text-sm">Polygon</div>
-   248|                                <div class="text-xs text-zinc-500">POL • Scaling</div>
-   249|                            </div>
-   250|                        </div>
-   251|                        <div class="chain-option" data-chain="avalanche" onclick="selectChain('avalanche', '🔴 Avalanche')">
-   252|                            <span class="text-lg">🔴</span>
-   253|                            <div>
-   254|                                <div class="font-medium text-sm">Avalanche</div>
-   255|                                <div class="text-xs text-zinc-500">AVAX • Subnets</div>
-   256|                            </div>
-   257|                        </div>
-   258|                        <div class="chain-option" data-chain="fantom" onclick="selectChain('fantom', '👻 Fantom')">
-   259|                            <span class="text-lg">👻</span>
-   260|                            <div>
-   261|                                <div class="font-medium text-sm">Fantom</div>
-   262|                                <div class="text-xs text-zinc-500">FTM • Fast finality</div>
-   263|                            </div>
-   264|                        </div>
-   265|                        <div class="chain-option" data-chain="optimism" onclick="selectChain('optimism', '🔴 Optimism')">
-   266|                            <span class="text-lg">🔴</span>
-   267|                            <div>
-   268|                                <div class="font-medium text-sm">Optimism</div>
-   269|                                <div class="text-xs text-zinc-500">ETH • OP Stack</div>
-   270|                            </div>
-   271|                        </div>
-   272|                        <div class="chain-option" data-chain="solana" onclick="selectChain('solana', '🟣 Solana')">
-   273|                            <span class="text-lg">🟣</span>
-   274|                            <div>
-   275|                                <div class="font-medium text-sm">Solana</div>
-   276|                                <div class="text-xs text-zinc-500">SOL • Fast & cheap</div>
-   277|                            </div>
-   278|                        </div>
-   279|                    </div>
-   280|                </div>
-   281|                
-   282|                <div class="flex-1 relative">
-   283|                    <input 
-   284|                        type="text" 
-   285|                        id="tokenAddress"
-   286|                        placeholder="Paste contract address (0x... or Solana address)"
-   287|                        class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm placeholder-zinc-500 focus:outline-none input-glow transition-all"
-   288|                        autocomplete="off"
-   289|                        spellcheck="false"
-   290|                    >
-   291|                    <button onclick="clearInput()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 hidden" id="clearBtn">✕</button>
-   292|                </div>
-   293|                <button onclick="scanToken()" id="scanBtn" class="scan-btn px-8 py-4 rounded-xl font-semibold text-white text-sm whitespace-nowrap">
-   294|                    🛡️ Scan Now
-   295|                </button>
-   296|            </div>
-   297|        </div>
-   298|
-   299|        <!-- Loading State -->
-   300|        <div id="loadingState" class="hidden text-center py-16">
-   301|            <div class="inline-block w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
-   302|            <p class="text-zinc-400 loading-pulse">Scanning token across multiple security databases...</p>
-   303|            <p class="text-zinc-600 text-sm mt-2">Checking GoPlus, DexScreener, and contract data</p>
-   304|        </div>
-   305|
-   306|        <!-- Rate Limit Error -->
-   307|        <div id="rateLimitError" class="hidden result-card rounded-2xl p-6 mb-6 border-red-500/30 fade-in">
-   308|            <div class="flex items-center gap-3">
-   309|                <span class="text-2xl">⏱️</span>
-   310|                <div>
-   311|                    <p class="font-semibold text-red-400">Rate Limit Exceeded</p>
-   312|                    <p class="text-sm text-zinc-400" id="rateLimitMsg">You've used all 20 scans this minute. Please wait before scanning again.</p>
-   313|                </div>
-   314|            </div>
-   315|        </div>
-   316|
-   317|        <!-- Results -->
-   318|        <div id="results" class="hidden">
-   319|            
-   320|            <!-- Score Card -->
-   321|            <div class="result-card rounded-2xl p-8 mb-6 fade-in" id="scoreCard">
-   322|                <div class="flex flex-col sm:flex-row items-center gap-8">
-   323|                    <div class="score-ring" id="scoreRing">
-   324|                        <span id="scoreValue">--</span>
-   325|                    </div>
-   326|                    
-   327|                    <div class="flex-1 text-center sm:text-left">
-   328|                        <div class="flex items-center gap-3 justify-center sm:justify-start mb-2">
-   329|                            <h3 class="text-2xl font-bold" id="tokenName">Token Name</h3>
-   330|                            <span class="badge" id="riskBadge">--</span>
-   331|                            <span class="badge bg-zinc-800 text-zinc-300 border border-zinc-700 text-xs" id="chainBadge">🟡 BSC</span>
-   332|                        </div>
-   333|                        <p class="text-zinc-400 font-mono text-sm mb-1" id="tokenAddressDisplay">0x...</p>
-   334|                        <p class="text-zinc-500 text-sm" id="tokenSymbol">SYMBOL</p>
-   335|                        
-   336|                        <div class="flex flex-wrap gap-4 mt-4 text-sm">
-   337|                            <div>
-   338|                                <span class="text-zinc-500">Price:</span>
-   339|                                <span class="text-white font-semibold" id="tokenPrice">$0.00</span>
-   340|                            </div>
-   341|                            <div>
-   342|                                <span class="text-zinc-500">MC:</span>
-   343|                                <span class="text-white font-semibold" id="tokenMC">$0</span>
-   344|                            </div>
-   345|                            <div>
-   346|                                <span class="text-zinc-500">24h Vol:</span>
-   347|                                <span class="text-white font-semibold" id="tokenVol">$0</span>
-   348|                            </div>
-   349|                            <div>
-   350|                                <span class="text-zinc-500">Holders:</span>
-   351|                                <span class="text-white font-semibold" id="tokenHolders">0</span>
-   352|                            </div>
-   353|                        </div>
-   354|                    </div>
-   355|                </div>
-   356|            </div>
-   357|
-   358|            <!-- Details Grid -->
-   359|            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-   360|                
-   361|                <div class="result-card rounded-xl p-5 fade-in" style="animation-delay: 0.1s">
-   362|                    <div class="flex items-center gap-3 mb-3">
-   363|                        <span class="text-2xl">🍯</span>
-   364|                        <span class="font-semibold">Honeypot Detection</span>
-   365|                    </div>
-   366|                    <div class="space-y-2 text-sm">
-   367|                        <div class="flex justify-between">
-   368|                            <span class="text-zinc-400">Is Honeypot</span>
-   369|                            <span id="isHoneypot" class="font-semibold">--</span>
-   370|                        </div>
-   371|                        <div class="flex justify-between">
-   372|                            <span class="text-zinc-400">Can Sell</span>
-   373|                            <span id="canSell" class="font-semibold">--</span>
-   374|                        </div>
-   375|                        <div class="flex justify-between">
-   376|                            <span class="text-zinc-400">Buy Tax</span>
-   377|                            <span id="buyTax" class="font-semibold">--</span>
-   378|                        </div>
-   379|                        <div class="flex justify-between">
-   380|                            <span class="text-zinc-400">Sell Tax</span>
-   381|                            <span id="sellTax" class="font-semibold">--</span>
-   382|                        </div>
-   383|                    </div>
-   384|                </div>
-   385|
-   386|                <div class="result-card rounded-xl p-5 fade-in" style="animation-delay: 0.15s">
-   387|                    <div class="flex items-center gap-3 mb-3">
-   388|                        <span class="text-2xl">👤</span>
-   389|                        <span class="font-semibold">Ownership</span>
-   390|                    </div>
-   391|                    <div class="space-y-2 text-sm">
-   392|                        <div class="flex justify-between">
-   393|                            <span class="text-zinc-400">Renounced</span>
-   394|                            <span id="ownerRenounced" class="font-semibold">--</span>
-   395|                        </div>
-   396|                        <div class="flex justify-between">
-   397|                            <span class="text-zinc-400">Verified Source</span>
-   398|                            <span id="isVerified" class="font-semibold">--</span>
-   399|                        </div>
-   400|                        <div class="flex justify-between">
-   401|                            <span class="text-zinc-400">Proxy Contract</span>
-   402|                            <span id="isProxy" class="font-semibold">--</span>
-   403|                        </div>
-   404|                        <div class="flex justify-between">
-   405|                            <span class="text-zinc-400">Liquidity Locked</span>
-   406|                            <span id="liqLocked" class="font-semibold">--</span>
-   407|                        </div>
-   408|                    </div>
-   409|                </div>
-   410|            </div>
-   411|
-   412|            <!-- Analysis -->
-   413|            <div class="result-card rounded-2xl p-6 fade-in" style="animation-delay: 0.2s">
-   414|                <div class="flex items-center justify-between mb-4">
-   415|                    <h4 class="font-bold">Analysis</h4>
-   416|                    <div class="flex items-center gap-2" id="dataSources">
-   417|                        <span class="text-xs text-zinc-500">Data:</span>
-   418|                    </div>
-   419|                </div>
-   420|                <div id="analysisList" class="space-y-3"></div>
-   421|            </div>
-   422|            
-   423|            <p class="text-center text-zinc-600 text-xs mt-6">
-   424|                ⚠️ This is not financial advice. Always do your own research. 
-   425|                Data sourced from GoPlus Security & DexScreener.
-   426|            </p>
-   427|        </div>
-   428|
-   429|        <!-- Empty State -->
-   430|        <div id="emptyState" class="text-center py-16">
-   431|            <div class="text-6xl mb-4">🔍</div>
-   432|            <p class="text-zinc-500">Enter a contract address above to scan</p>
-   433|            <p class="text-zinc-600 text-sm mt-2">Supports 9 chains: BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana</p>
-   434|        </div>
-   435|
-   436|        <!-- Features Section -->
-   437|        <div class="mt-16 mb-12">
-   438|            <h3 class="text-xl font-bold text-center mb-8">Why <span class="text-indigo-400">Chain Sentinel</span>?</h3>
-   439|            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-   440|                <div class="result-card rounded-xl p-5 text-center">
-   441|                    <div class="text-3xl mb-3">⚡</div>
-   442|                    <h4 class="font-semibold mb-2">Instant Results</h4>
-   443|                    <p class="text-zinc-500 text-sm">Paste address, get report in under 2 seconds. No signup, no wallet connection.</p>
-   444|                </div>
-   445|                <div class="result-card rounded-xl p-5 text-center">
-   446|                    <div class="text-3xl mb-3">🔗</div>
-   447|                    <h4 class="font-semibold mb-2">9 Chains Supported</h4>
-   448|                    <p class="text-zinc-500 text-sm">BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana.</p>
-   449|                </div>
-   450|                <div class="result-card rounded-xl p-5 text-center">
-   451|                    <div class="text-3xl mb-3">🔒</div>
-   452|                    <h4 class="font-semibold mb-2">100% Free</h4>
-   453|                    <p class="text-zinc-500 text-sm">No premium tier. No hidden fees. Every scan is free forever.</p>
-   454|                </div>
-   455|            </div>
-   456|        </div>
-   457|
-   458|        <!-- Contact Section -->
-   459|        <div id="contact-section" class="mt-12 mb-8">
-   460|            <div class="result-card rounded-2xl p-8">
-   461|                <h3 class="text-xl font-bold text-center mb-2">Get in Touch</h3>
-   462|                <p class="text-zinc-500 text-sm text-center mb-6">Bug reports, feature requests, partnerships, or just say hello.</p>
-   463|                
-   464|                <form id="contactForm" class="max-w-lg mx-auto space-y-4">
-   465|                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-   466|                        <input type="text" name="name" placeholder="Your name" class="contact-input" required>
-   467|                        <input type="email" name="email" placeholder="Your email" class="contact-input" required>
-   468|                    </div>
-   469|                    <input type="text" name="subject" placeholder="Subject" class="contact-input" required>
-   470|                    <textarea name="message" rows="4" placeholder="Your message..." class="contact-input" required></textarea>
-   471|                    <div class="text-center">
-   472|                        <button type="submit" class="send-btn" id="contactSubmitBtn">
-   473|                            ✉️ Send Message
-   474|                        </button>
-   475|                        <p class="text-zinc-600 text-xs mt-2">Messages are sent to info@chainshieldsentinel.tech</p>
-   476|                    </div>
-   477|                    <div id="contactSuccess" class="hidden text-center py-4">
-   478|                        <p class="text-green-400 font-semibold">✅ Message sent! We'll get back to you soon.</p>
-   479|                    </div>
-   480|                    <div id="contactError" class="hidden text-center py-4">
-   481|                        <p class="text-red-400 font-semibold">❌ Failed to send. Please email us directly at info@chainshieldsentinel.tech</p>
-   482|                    </div>
-   483|                </form>
-   484|            </div>
-   485|        </div>
-   486|
-   487|    </main>
-   488|
-   489|    <!-- Footer -->
-   490|    <footer class="border-t border-white/5 mt-10">
-   491|        <div class="max-w-4xl mx-auto px-6 py-8">
-   492|            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
-   493|                <!-- Brand -->
-   494|                <div>
-   495|                    <div class="flex items-center gap-2 mb-3">
-   496|                        <img src="/static/logo_header.png" alt="Chain Sentinel" class="w-8 h-8">
-   497|                        <span class="font-bold">Chain Sentinel</span>
-   498|                    </div>
-   499|                    <p class="text-zinc-500 text-xs">Part of the Sentinel suite. Free token safety scanner for the Web3 community.</p>
-   500|                </div>
-   501|
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO Meta Tags -->
+    <title>Chain Sentinel — Free Token Safety Scanner | Detect Rugpulls & Honeypots</title>
+    <meta name="description" content="Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains (BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana). Paste any contract address and get a safety report.">
+    <meta name="keywords" content="token scanner, rugpull detector, honeypot checker, crypto safety, blockchain security, token audit, BSC scanner, Ethereum scanner, Solana scanner, web3 security">
+    <meta name="author" content="Sentinel">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chainshieldsentinel.tech/">
+    <meta property="og:title" content="Chain Sentinel — Free Token Safety Scanner">
+    <meta property="og:description" content="Detect honeypots, rugpulls, and scams across 9 blockchains. Free, instant, no wallet required.">
+    <meta property="og:image" content="https://chainshieldsentinel.tech/og-image.png">
+    <meta property="og:site_name" content="Chain Sentinel by Sentinel">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chain Sentinel — Free Token Safety Scanner">
+    <meta name="twitter:description" content="Detect honeypots, rugpulls, and scams across 9 blockchains. Free, instant, no wallet required.">
+    <meta name="twitter:image" content="https://chainshieldsentinel.tech/og-image.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://chainshieldsentinel.tech/">
+    
+    <!-- Plausible Analytics (privacy-friendly) -->
+    <script defer data-domain="chainshieldsentinel.tech" src="https://plausible.io/js/script.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- JSON-LD Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Chain Sentinel",
+        "url": "https://chainshieldsentinel.tech",
+        "description": "Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains.",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Sentinel",
+            "url": "https://chainshieldsentinel.tech"
+        }
+    }
+    </script>
+
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0a0a0f; color: #e4e4e7; }
+        
+        .glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+        .glow-yellow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        
+        .score-ring {
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900;
+            transition: all 0.5s ease;
+        }
+        
+        .scan-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transition: all 0.3s ease;
+        }
+        .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); }
+        .scan-btn:active { transform: translateY(0); }
+        
+        .result-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.4s ease;
+        }
+        
+        .warning-item { border-left: 3px solid #ef4444; }
+        .positive-item { border-left: 3px solid #22c55e; }
+        
+        .loading-pulse { animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
+        .input-glow:focus { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5); }
+        
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 4px 12px; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        
+        /* Custom chain dropdown */
+        .chain-dropdown { position: relative; }
+        .chain-menu {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 8px; z-index: 50;
+            max-height: 320px; overflow-y: auto;
+            display: none;
+        }
+        .chain-menu.open { display: block; }
+        .chain-option {
+            padding: 10px 12px; border-radius: 8px; cursor: pointer;
+            transition: all 0.15s; display: flex; align-items: center; gap: 10px;
+        }
+        .chain-option:hover { background: rgba(99, 102, 241, 0.15); }
+        .chain-option.selected { background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.3); }
+        
+        /* Scrollbar for chain menu */
+        .chain-menu::-webkit-scrollbar { width: 6px; }
+        .chain-menu::-webkit-scrollbar-track { background: transparent; }
+        .chain-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* Contact form */
+        .contact-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 100%;
+            color: #e4e4e7;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .contact-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5); border-color: rgba(99, 102, 241, 0.5); }
+        .contact-input::placeholder { color: #52525b; }
+
+        .send-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+            cursor: pointer;
+        }
+        .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Nav links */
+        .nav-link { 
+            color: #a1a1aa; font-size: 0.875rem; font-weight: 500;
+            transition: color 0.2s; cursor: pointer;
+        }
+        .nav-link:hover { color: #818cf8; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="border-b border-white/5 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="/static/logo_header.png" alt="Chain Sentinel" class="w-10 h-10">
+                <div>
+                    <h1 class="text-lg font-bold">Chain Sentinel</h1>
+                    <p class="text-xs text-zinc-500">by Sentinel</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex items-center gap-6">
+                <a href="#scanner" class="nav-link">Scanner</a>
+                <a href="#contact-section" class="nav-link">Contact</a>
+                <a href="https://x.com/ChainShieldSn" target="_blank" class="nav-link">Twitter</a>
+                <a href="https://github.com/0xairdropnoob/chain-shield" target="_blank" class="nav-link">GitHub</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-zinc-500 hidden sm:inline" id="rateInfo">20 scans/min free</span>
+                <span class="badge bg-green-500/10 text-green-400 border border-green-500/20">LIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-6 py-10">
+        
+        <!-- Hero -->
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-black mb-3">
+                Scan Before You <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Buy</span>
+            </h2>
+            <p class="text-zinc-400 max-w-lg mx-auto">
+                Paste any token contract address and get an instant safety report. 
+                Detect honeypots, rugpulls, and scams across 9 chains.
+            <p class="text-indigo-400/70 text-sm mt-3 tracking-widest uppercase font-medium">Monitoring &amp; Intelligence Layer</p>
+            </p>
+        </div>
+
+        <!-- Search Box -->
+        <div class="result-card rounded-2xl p-6 mb-8" id="scanner">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <!-- Chain Dropdown -->
+                <div class="chain-dropdown" id="chainDropdown">
+                    <button 
+                        onclick="toggleChainMenu()" 
+                        id="chainSelector"
+                        class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm hover:border-white/20 transition-all min-w-[160px] justify-between"
+                    >
+                        <span id="chainLabel">🟡 BNB Chain</span>
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="chain-menu" id="chainMenu">
+                        <div class="chain-option selected" data-chain="bsc" onclick="selectChain('bsc', '🟡 BNB Chain')">
+                            <span class="text-lg">🟡</span>
+                            <div>
+                                <div class="font-medium text-sm">BNB Chain</div>
+                                <div class="text-xs text-zinc-500">BNB • Low fees</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="eth" onclick="selectChain('eth', '🔷 Ethereum')">
+                            <span class="text-lg">🔷</span>
+                            <div>
+                                <div class="font-medium text-sm">Ethereum</div>
+                                <div class="text-xs text-zinc-500">ETH • Most liquid</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="base" onclick="selectChain('base', '🔵 Base')">
+                            <span class="text-lg">🔵</span>
+                            <div>
+                                <div class="font-medium text-sm">Base</div>
+                                <div class="text-xs text-zinc-500">ETH • Coinbase L2</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="arbitrum" onclick="selectChain('arbitrum', '🌀 Arbitrum')">
+                            <span class="text-lg">🌀</span>
+                            <div>
+                                <div class="font-medium text-sm">Arbitrum</div>
+                                <div class="text-xs text-zinc-500">ETH • Fast & cheap</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="polygon" onclick="selectChain('polygon', '🟣 Polygon')">
+                            <span class="text-lg">🟣</span>
+                            <div>
+                                <div class="font-medium text-sm">Polygon</div>
+                                <div class="text-xs text-zinc-500">POL • Scaling</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="avalanche" onclick="selectChain('avalanche', '🔴 Avalanche')">
+                            <span class="text-lg">🔴</span>
+                            <div>
+                                <div class="font-medium text-sm">Avalanche</div>
+                                <div class="text-xs text-zinc-500">AVAX • Subnets</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="fantom" onclick="selectChain('fantom', '👻 Fantom')">
+                            <span class="text-lg">👻</span>
+                            <div>
+                                <div class="font-medium text-sm">Fantom</div>
+                                <div class="text-xs text-zinc-500">FTM • Fast finality</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="optimism" onclick="selectChain('optimism', '🔴 Optimism')">
+                            <span class="text-lg">🔴</span>
+                            <div>
+                                <div class="font-medium text-sm">Optimism</div>
+                                <div class="text-xs text-zinc-500">ETH • OP Stack</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="solana" onclick="selectChain('solana', '🟣 Solana')">
+                            <span class="text-lg">🟣</span>
+                            <div>
+                                <div class="font-medium text-sm">Solana</div>
+                                <div class="text-xs text-zinc-500">SOL • Fast & cheap</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 relative">
+                    <input 
+                        type="text" 
+                        id="tokenAddress"
+                        placeholder="Paste contract address (0x... or Solana address)"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm placeholder-zinc-500 focus:outline-none input-glow transition-all"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button onclick="clearInput()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 hidden" id="clearBtn">✕</button>
+                </div>
+                <button onclick="scanToken()" id="scanBtn" class="scan-btn px-8 py-4 rounded-xl font-semibold text-white text-sm whitespace-nowrap">
+                    🛡️ Scan Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden text-center py-16">
+            <div class="inline-block w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-zinc-400 loading-pulse">Scanning token across multiple security databases...</p>
+            <p class="text-zinc-600 text-sm mt-2">Checking GoPlus, DexScreener, and contract data</p>
+        </div>
+
+        <!-- Rate Limit Error -->
+        <div id="rateLimitError" class="hidden result-card rounded-2xl p-6 mb-6 border-red-500/30 fade-in">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">⏱️</span>
+                <div>
+                    <p class="font-semibold text-red-400">Rate Limit Exceeded</p>
+                    <p class="text-sm text-zinc-400" id="rateLimitMsg">You've used all 20 scans this minute. Please wait before scanning again.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden">
+            
+            <!-- Score Card -->
+            <div class="result-card rounded-2xl p-8 mb-6 fade-in" id="scoreCard">
+                <div class="flex flex-col sm:flex-row items-center gap-8">
+                    <div class="score-ring" id="scoreRing">
+                        <span id="scoreValue">--</span>
+                    </div>
+                    
+                    <div class="flex-1 text-center sm:text-left">
+                        <div class="flex items-center gap-3 justify-center sm:justify-start mb-2">
+                            <h3 class="text-2xl font-bold" id="tokenName">Token Name</h3>
+                            <span class="badge" id="riskBadge">--</span>
+                            <span class="badge bg-zinc-800 text-zinc-300 border border-zinc-700 text-xs" id="chainBadge">🟡 BSC</span>
+                        </div>
+                        <p class="text-zinc-400 font-mono text-sm mb-1" id="tokenAddressDisplay">0x...</p>
+                        <p class="text-zinc-500 text-sm" id="tokenSymbol">SYMBOL</p>
+                        
+                        <div class="flex flex-wrap gap-4 mt-4 text-sm">
+                            <div>
+                                <span class="text-zinc-500">Price:</span>
+                                <span class="text-white font-semibold" id="tokenPrice">$0.00</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">MC:</span>
+                                <span class="text-white font-semibold" id="tokenMC">$0</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">24h Vol:</span>
+                                <span class="text-white font-semibold" id="tokenVol">$0</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">Holders:</span>
+                                <span class="text-white font-semibold" id="tokenHolders">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                
+                <div class="result-card rounded-xl p-5 fade-in" style="animation-delay: 0.1s">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-2xl">🍯</span>
+                        <span class="font-semibold">Honeypot Detection</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Is Honeypot</span>
+                            <span id="isHoneypot" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Can Sell</span>
+                            <span id="canSell" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Buy Tax</span>
+                            <span id="buyTax" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Sell Tax</span>
+                            <span id="sellTax" class="font-semibold">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card rounded-xl p-5 fade-in" style="animation-delay: 0.15s">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-2xl">👤</span>
+                        <span class="font-semibold">Ownership</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Renounced</span>
+                            <span id="ownerRenounced" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Verified Source</span>
+                            <span id="isVerified" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Proxy Contract</span>
+                            <span id="isProxy" class="font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">Liquidity Locked</span>
+                            <span id="liqLocked" class="font-semibold">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis -->
+            <div class="result-card rounded-2xl p-6 fade-in" style="animation-delay: 0.2s">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold">Analysis</h4>
+                    <div class="flex items-center gap-2" id="dataSources">
+                        <span class="text-xs text-zinc-500">Data:</span>
+                    </div>
+                </div>
+                <div id="analysisList" class="space-y-3"></div>
+            </div>
+            
+            <p class="text-center text-zinc-600 text-xs mt-6">
+                ⚠️ This is not financial advice. Always do your own research. 
+                Data sourced from GoPlus Security & DexScreener.
+            </p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-16">
+            <div class="text-6xl mb-4">🔍</div>
+            <p class="text-zinc-500">Enter a contract address above to scan</p>
+            <p class="text-zinc-600 text-sm mt-2">Supports 9 chains: BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana</p>
+        </div>
+
+        <!-- Features Section -->
+        <div class="mt-16 mb-12">
+            <h3 class="text-xl font-bold text-center mb-8">Why <span class="text-indigo-400">Chain Sentinel</span>?</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="result-card rounded-xl p-5 text-center">
+                    <div class="text-3xl mb-3">⚡</div>
+                    <h4 class="font-semibold mb-2">Instant Results</h4>
+                    <p class="text-zinc-500 text-sm">Paste address, get report in under 2 seconds. No signup, no wallet connection.</p>
+                </div>
+                <div class="result-card rounded-xl p-5 text-center">
+                    <div class="text-3xl mb-3">🔗</div>
+                    <h4 class="font-semibold mb-2">9 Chains Supported</h4>
+                    <p class="text-zinc-500 text-sm">BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana.</p>
+                </div>
+                <div class="result-card rounded-xl p-5 text-center">
+                    <div class="text-3xl mb-3">🔒</div>
+                    <h4 class="font-semibold mb-2">100% Free</h4>
+                    <p class="text-zinc-500 text-sm">No premium tier. No hidden fees. Every scan is free forever.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div id="contact-section" class="mt-12 mb-8">
+            <div class="result-card rounded-2xl p-8">
+                <h3 class="text-xl font-bold text-center mb-2">Get in Touch</h3>
+                <p class="text-zinc-500 text-sm text-center mb-6">Bug reports, feature requests, partnerships, or just say hello.</p>
+                
+                <form id="contactForm" class="max-w-lg mx-auto space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" name="name" placeholder="Your name" class="contact-input" required>
+                        <input type="email" name="email" placeholder="Your email" class="contact-input" required>
+                    </div>
+                    <input type="text" name="subject" placeholder="Subject" class="contact-input" required>
+                    <textarea name="message" rows="4" placeholder="Your message..." class="contact-input" required></textarea>
+                    <div class="text-center">
+                        <button type="submit" class="send-btn" id="contactSubmitBtn">
+                            ✉️ Send Message
+                        </button>
+                        <p class="text-zinc-600 text-xs mt-2">Messages are sent to info@chainshieldsentinel.tech</p>
+                    </div>
+                    <div id="contactSuccess" class="hidden text-center py-4">
+                        <p class="text-green-400 font-semibold">✅ Message sent! We'll get back to you soon.</p>
+                    </div>
+                    <div id="contactError" class="hidden text-center py-4">
+                        <p class="text-red-400 font-semibold">❌ Failed to send. Please email us directly at info@chainshieldsentinel.tech</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 mt-10">
+        <div class="max-w-4xl mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
+                <!-- Brand -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <img src="/static/logo_header.png" alt="Chain Sentinel" class="w-8 h-8">
+                        <span class="font-bold">Chain Sentinel</span>
+                    </div>
+                    <p class="text-zinc-500 text-xs">Part of the Sentinel suite. Free token safety scanner for the Web3 community.</p>
+                </div>
+                <!-- Links -->
+                <div>
+                    <h4 class="font-semibold mb-3 text-zinc-300">Links</h4>
+                    <ul class="space-y-2 text-zinc-500 text-xs">
+                        <li><a href="#scanner" class="hover:text-indigo-400 transition">Scanner</a></li>
+                        <li><a href="#contact-section" class="hover:text-indigo-400 transition">Contact</a></li>
+                        <li><a href="https://x.com/ChainShieldSn" target="_blank" class="hover:text-indigo-400 transition">Twitter / X</a></li>
+                        <li><a href="https://github.com/0xairdropnoob/chain-shield" target="_blank" class="hover:text-indigo-400 transition">GitHub</a></li>
+                    </ul>
+                </div>
+                <!-- Contact -->
+                <div>
+                    <h4 class="font-semibold mb-3 text-zinc-300">Contact & Support</h4>
+                    <ul class="space-y-2 text-zinc-500 text-xs">
+                        <li>📧 <a href="mailto:info@chainshieldsentinel.tech" class="hover:text-indigo-400 transition">info@chainshieldsentinel.tech</a></li>
+                        <li>🐦 <a href="https://x.com/ChainShieldSn" target="_blank" class="hover:text-indigo-400 transition">@ChainShieldSn</a></li>
+                        <li>🐛 <a href="https://github.com/0xairdropnoob/chain-shield/issues" target="_blank" class="hover:text-indigo-400 transition">Report Bug / Request Feature</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-white/5 mt-6 pt-4 text-center text-zinc-700 text-xs">
+                <p>🛡️ Protect Your Money, Your Time, and Your Attention</p>
+                <p class="mt-1">&copy; 2025 Sentinel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let selectedChain = 'bsc';
+        let scanning = false;
+
+        function toggleChainMenu() {
+            const menu = document.getElementById('chainMenu');
+            menu.classList.toggle('open');
+        }
+
+        function selectChain(chain, label) {
+            selectedChain = chain;
+            document.getElementById('chainLabel').textContent = label;
+            document.querySelectorAll('.chain-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.chain === chain) opt.classList.add('selected');
+            });
+            document.getElementById('chainMenu').classList.remove('open');
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.chain-dropdown')) {
+                document.getElementById('chainMenu').classList.remove('open');
+            }
+        });
+
+        function clearInput() {
+            document.getElementById('tokenAddress').value = '';
+            document.getElementById('clearBtn').classList.add('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('rateLimitError').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        document.getElementById('tokenAddress').addEventListener('input', (e) => {
+            document.getElementById('clearBtn').classList.toggle('hidden', !e.target.value.length);
+        });
+
+        document.getElementById('tokenAddress').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !scanning) scanToken();
+        });
+
+        async function scanToken() {
+            const address = document.getElementById('tokenAddress').value.trim();
+            if (!address || scanning) return;
+            
+            scanning = true;
+            
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('rateLimitError').classList.add('hidden');
+            document.getElementById('scanBtn').textContent = '⏳ Scanning...';
+            
+            try {
+                const resp = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, chain: selectedChain })
+                });
+                
+                if (resp.status === 429) {
+                    const err = await resp.json();
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('rateLimitError').classList.remove('hidden');
+                    document.getElementById('rateLimitMsg').textContent = err.detail || 'Rate limit exceeded. Try again in a minute.';
+                    return;
+                }
+                
+                const data = await resp.json();
+                displayResults(data);
+                
+            } catch (err) {
+                console.error('Scan failed:', err);
+                alert('Scan failed. Please check the address and try again.');
+            } finally {
+                scanning = false;
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('scanBtn').textContent = '🛡️ Scan Now';
+            }
+        }
+
+        function displayResults(data) {
+            const score = data.safety_score;
+            const scoreValue = document.getElementById('scoreValue');
+            const scoreRing = document.getElementById('scoreRing');
+            scoreValue.textContent = score;
+            
+            let ringColor, glowClass, textColor;
+            if (data.risk_level === 'UNKNOWN') { ringColor = 'border-zinc-500 bg-zinc-500/10'; glowClass = ''; textColor = 'text-zinc-400'; }
+            else if (score >= 80) { ringColor = 'border-green-500 bg-green-500/10'; glowClass = 'glow-green'; textColor = 'text-green-400'; }
+            else if (score >= 60) { ringColor = 'border-yellow-500 bg-yellow-500/10'; glowClass = 'glow-yellow'; textColor = 'text-yellow-400'; }
+            else { ringColor = 'border-red-500 bg-red-500/10'; glowClass = 'glow-red'; textColor = 'text-red-400'; }
+            
+            scoreRing.className = `score-ring border-4 ${ringColor} ${glowClass}`;
+            scoreValue.className = textColor;
+            scoreValue.textContent = data.risk_level === 'UNKNOWN' ? '?' : score;
+            
+            // Risk badge
+            const riskBadge = document.getElementById('riskBadge');
+            riskBadge.textContent = data.risk_level;
+            riskBadge.className = data.risk_level === 'UNKNOWN' ? 'badge bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                : data.risk_level === 'LOW' ? 'badge bg-green-500/10 text-green-400 border border-green-500/20'
+                : data.risk_level === 'MEDIUM' ? 'badge bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                : 'badge bg-red-500/10 text-red-400 border border-red-500/20';
+            
+            // Chain badge
+            const chainNames = { bsc:'🟡 BSC', eth:'🔷 ETH', base:'🔵 Base', arbitrum:'🌀 ARB', polygon:'🟣 POLY', avalanche:'🔴 AVAX', fantom:'👻 FTM', optimism:'🔴 OP', solana:'🟣 SOL' };
+            document.getElementById('chainBadge').textContent = chainNames[data.chain] || data.chain;
+            
+            // Token info
+            document.getElementById('tokenName').textContent = data.name || 'Unknown Token';
+            document.getElementById('tokenAddressDisplay').textContent = data.address;
+            document.getElementById('tokenSymbol').textContent = data.symbol || '???';
+            document.getElementById('tokenPrice').textContent = '$' + formatNum(data.price_usd);
+            document.getElementById('tokenMC').textContent = '$' + formatNum(data.market_cap);
+            document.getElementById('tokenVol').textContent = '$' + formatNum(data.volume_24h);
+            document.getElementById('tokenHolders').textContent = data.holders?.toLocaleString() || '0';
+            
+            // Honeypot
+            document.getElementById('isHoneypot').textContent = data.is_honeypot ? '⚠️ YES' : '✅ No';
+            document.getElementById('isHoneypot').className = `font-semibold ${data.is_honeypot ? 'text-red-400' : 'text-green-400'}`;
+            
+            document.getElementById('canSell').textContent = data.can_sell === false ? '🚫 No' : '✅ Yes';
+            document.getElementById('canSell').className = `font-semibold ${data.can_sell === false ? 'text-red-400' : 'text-green-400'}`;
+            
+            document.getElementById('buyTax').textContent = (data.buy_tax * 100).toFixed(1) + '%';
+            document.getElementById('buyTax').className = `font-semibold ${data.buy_tax > 0.1 ? 'text-red-400' : 'text-green-400'}`;
+            
+            document.getElementById('sellTax').textContent = (data.sell_tax * 100).toFixed(1) + '%';
+            document.getElementById('sellTax').className = `font-semibold ${data.sell_tax > 0.1 ? 'text-red-400' : 'text-green-400'}`;
+            
+            // Ownership
+            document.getElementById('ownerRenounced').textContent = data.owner_renounced ? '✅ Yes' : '⚠️ No';
+            document.getElementById('ownerRenounced').className = `font-semibold ${data.owner_renounced ? 'text-green-400' : 'text-yellow-400'}`;
+            
+            document.getElementById('isVerified').textContent = data.is_verified ? '✅ Yes' : '⚠️ No';
+            document.getElementById('isVerified').className = `font-semibold ${data.is_verified ? 'text-green-400' : 'text-yellow-400'}`;
+            
+            document.getElementById('isProxy').textContent = data.is_proxy ? '⚠️ Yes' : '✅ No';
+            document.getElementById('isProxy').className = `font-semibold ${data.is_proxy ? 'text-yellow-400' : 'text-green-400'}`;
+            
+            document.getElementById('liqLocked').textContent = data.liquidity_locked ? '✅ Yes' : '⚠️ Unknown';
+            document.getElementById('liqLocked').className = `font-semibold ${data.liquidity_locked ? 'text-green-400' : 'text-yellow-400'}`;
+            
+            // Analysis
+            const analysisList = document.getElementById('analysisList');
+            analysisList.innerHTML = '';
+            data.warnings.forEach(w => {
+                analysisList.innerHTML += `<div class="warning-item bg-red-500/5 rounded-lg px-4 py-3 text-sm text-red-300">${w}</div>`;
+            });
+            data.positives.forEach(p => {
+                analysisList.innerHTML += `<div class="positive-item bg-green-500/5 rounded-lg px-4 py-3 text-sm text-green-300">${p}</div>`;
+            });
+            if (!data.warnings.length && !data.positives.length) {
+                analysisList.innerHTML = '<div class="text-zinc-500 text-sm">No specific indicators found. Proceed with caution.</div>';
+            }
+            
+            // Data sources
+            const dataSources = document.getElementById('dataSources');
+            dataSources.innerHTML = '<span class="text-xs text-zinc-500">Data:</span>';
+            if (data.data_sources && data.data_sources.length > 0) {
+                data.data_sources.forEach(src => {
+                    dataSources.innerHTML += `<span class="badge bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs">${src}</span>`;
+                });
+            } else {
+                dataSources.innerHTML += '<span class="badge bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-xs">On-chain only</span>';
+            }
+            
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function formatNum(n) {
+            if (!n || n === 0) return '0';
+            if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return (n/1e3).toFixed(2) + 'K';
+            return n.toFixed(6);
+        }
+
+        // Contact form
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('contactSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+            
+            const form = e.target;
+            const data = new FormData(form);
+            
+            try {
+                const resp = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: data.get('name'),
+                        email: data.get('email'),
+                        subject: data.get('subject'),
+                        message: data.get('message')
+                    })
+                });
+                
+                if (resp.ok) {
+                    document.getElementById('contactSuccess').classList.remove('hidden');
+                    document.getElementById('contactError').classList.add('hidden');
+                    form.reset();
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (err) {
+                document.getElementById('contactError').classList.remove('hidden');
+                document.getElementById('contactSuccess').classList.add('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✉️ Send Message';
+            }
+        });
+    </script>
+
+</body>
+</html>
