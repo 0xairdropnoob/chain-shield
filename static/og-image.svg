@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.05">
+    <line x1="0" y1="0" x2="1200" y2="630" stroke="white" stroke-width="1"/>
+    <line x1="200" y1="0" x2="1200" y2="500" stroke="white" stroke-width="1"/>
+    <line x1="400" y1="0" x2="1200" y2="400" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="200" x2="800" y2="630" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="400" x2="600" y2="630" stroke="white" stroke-width="1"/>
+  </g>
+  
+  <!-- Hexagon decorative -->
+  <path d="M600 100 L800 200 L800 400 L600 500 L400 400 L400 200 Z" 
+        fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.2"/>
+  <path d="M600 150 L750 230 L750 370 L600 450 L450 370 L450 230 Z" 
+        fill="url(#accent)" opacity="0.05"/>
+  
+  <!-- Logo icon -->
+  <g transform="translate(520, 180)">
+    <!-- Hexagonal shield -->
+    <path d="M80 10 L145 45 L145 115 L80 185 L15 115 L15 45 Z" 
+          fill="none" stroke="url(#accent)" stroke-width="3" filter="url(#glow)"/>
+    <!-- Chain links -->
+    <g transform="translate(48, 78) rotate(-15)">
+      <rect x="0" y="0" width="30" height="16" rx="8" fill="none" stroke="url(#accent)" stroke-width="3" filter="url(#glow)"/>
+    </g>
+    <g transform="translate(68, 92) rotate(15)">
+      <rect x="0" y="0" width="30" height="16" rx="8" fill="none" stroke="url(#accent)" stroke-width="3" filter="url(#glow)"/>
+    </g>
+    <!-- Scan line -->
+    <line x1="20" y1="100" x2="140" y2="100" stroke="url(#accent)" stroke-width="1.5" opacity="0.6" stroke-dasharray="4,4"/>
+    <!-- Pulse dots -->
+    <circle cx="50" cy="100" r="3" fill="#8b5cf6" filter="url(#glow)"/>
+    <circle cx="80" cy="100" r="4" fill="#a855f7" filter="url(#glow)"/>
+    <circle cx="110" cy="100" r="3" fill="#6366f1" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Text: CHAIN SHIELD -->
+  <text x="600" y="430" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+        font-size="72" font-weight="900" fill="white" letter-spacing="-2">
+    CHAIN SHIELD
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="470" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+        font-size="24" font-weight="500" fill="#a1a1aa" letter-spacing="4">
+    FREE TOKEN SAFETY SCANNER
+  </text>
+  
+  <!-- Feature badges -->
+  <g transform="translate(340, 500)">
+    <rect x="0" y="0" width="180" height="36" rx="18" fill="url(#accent)" opacity="0.15"/>
+    <text x="90" y="23" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+          font-size="13" font-weight="600" fill="#818cf8">⚡ INSTANT RESULTS</text>
+  </g>
+  <g transform="translate(540, 500)">
+    <rect x="0" y="0" width="160" height="36" rx="18" fill="url(#accent)" opacity="0.15"/>
+    <text x="80" y="23" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+          font-size="13" font-weight="600" fill="#818cf8">🔗 9 CHAINS</text>
+  </g>
+  <g transform="translate(720, 500)">
+    <rect x="0" y="0" width="140" height="36" rx="18" fill="url(#accent)" opacity="0.15"/>
+    <text x="70" y="23" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+          font-size="13" font-weight="600" fill="#818cf8">🔒 100% FREE</text>
+  </g>
+  
+  <!-- URL -->
+  <text x="600" y="580" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+        font-size="18" font-weight="500" fill="#52525b">
+    chainshieldsentinel.tech
+  </text>
+  
+  <!-- By Sentinel -->
+  <text x="600" y="610" text-anchor="middle" font-family="Inter, system-ui, sans-serif" 
+        font-size="14" font-weight="400" fill="#3f3f46">
+    by Sentinel
+  </text>
+</svg>

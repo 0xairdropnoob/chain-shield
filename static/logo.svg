@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Main gradient -->
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    <!-- Glow -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Inner glow -->
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#0a0a0f" stroke="url(#grad1)" stroke-width="2" opacity="0.9"/>
+  
+  <!-- Hexagonal shield shape -->
+  <path d="M100 25 L155 55 L155 115 L100 175 L45 115 L45 55 Z" 
+        fill="none" stroke="url(#grad1)" stroke-width="3" filter="url(#glow)" opacity="0.8"/>
+  
+  <!-- Inner hexagon -->
+  <path d="M100 40 L140 62 L140 108 L100 160 L60 108 L60 62 Z" 
+        fill="url(#grad1)" opacity="0.15"/>
+  
+  <!-- Chain link 1 (left) -->
+  <g transform="translate(72, 85) rotate(-15)">
+    <rect x="0" y="0" width="28" height="14" rx="7" 
+          fill="none" stroke="url(#grad1)" stroke-width="3" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Chain link 2 (right, interlocked) -->
+  <g transform="translate(92, 95) rotate(15)">
+    <rect x="0" y="0" width="28" height="14" rx="7" 
+          fill="none" stroke="url(#grad1)" stroke-width="3" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Center scan line (laser/scan effect) -->
+  <line x1="50" y1="100" x2="150" y2="100" 
+        stroke="url(#grad1)" stroke-width="1.5" opacity="0.6" stroke-dasharray="4,4"/>
+  
+  <!-- Scan pulse dots -->
+  <circle cx="65" cy="100" r="2" fill="#8b5cf6" opacity="0.8" filter="url(#glow)">
+    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="100" r="2.5" fill="#a855f7" opacity="0.9" filter="url(#glow)">
+    <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle cx="135" cy="100" r="2" fill="#6366f1" opacity="0.8" filter="url(#glow)">
+    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+  
+  <!-- Corner accents -->
+  <circle cx="100" cy="30" r="3" fill="#8b5cf6" filter="url(#glow)"/>
+  <circle cx="150" cy="57" r="3" fill="#6366f1" filter="url(#glow)"/>
+  <circle cx="150" cy="113" r="3" fill="#a855f7" filter="url(#glow)"/>
+  <circle cx="100" cy="170" r="3" fill="#8b5cf6" filter="url(#glow)"/>
+  <circle cx="50" cy="113" r="3" fill="#6366f1" filter="url(#glow)"/>
+  <circle cx="50" cy="57" r="3" fill="#a855f7" filter="url(#glow)"/>
+</svg>
