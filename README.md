@@ -95,4 +95,4 @@ MIT
 
 ---
 
-**Part of the [Sentinel](https://github.com/0xairdropnoob/sentinel) Suite**
+**Part of the [Sentinel](https://github.com/0xairdropnoob) Suite**
