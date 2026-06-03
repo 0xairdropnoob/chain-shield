@@ -21,6 +21,9 @@ app = FastAPI(
 
 scanner = TokenScanner()
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # === RATE LIMITER ===
 # Simple in-memory rate limiter: 20 scans per minute per IP
