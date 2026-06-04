@@ -712,9 +712,7 @@
                 : data.risk_level === 'MEDIUM' ? 'badge bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                 : 'badge bg-red-500/10 text-red-400 border border-red-500/20';
             
-            // Chain badge
-            const chainNames = { bsc:'🟡 BSC', eth:'🔷 ETH', base:'🔵 Base', arbitrum:'🌀 ARB', polygon:'🟣 POLY', avalanche:'🔴 AVAX', fantom:'👻 FTM', optimism:'🔴 OP', solana:'🟣 SOL' };
-            // Show detected chain
+            // Chain badge & auto-detect
             const chainNames = { bsc:'🟡 BSC', eth:'🔷 ETH', base:'🔵 Base', arbitrum:'🌀 ARB', polygon:'🟣 POLY', avalanche:'🔴 AVAX', fantom:'👻 FTM', optimism:'🔴 OP', solana:'🟣 SOL' };
             document.getElementById('chainBadge').textContent = chainNames[data.chain] || data.chain;
             
