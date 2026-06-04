@@ -210,11 +210,18 @@
                         id="chainSelector"
                         class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm hover:border-white/20 transition-all min-w-[160px] justify-between"
                     >
-                        <span id="chainLabel">🟡 BNB Chain</span>
+                        <span id="chainLabel">🔍 Auto-detect</span>
                         <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div class="chain-menu" id="chainMenu">
-                        <div class="chain-option selected" data-chain="bsc" onclick="selectChain('bsc', '🟡 BNB Chain')">
+                                                <div class="chain-option selected" data-chain="auto" onclick="selectChain('auto', '🔍 Auto-detect')">
+                            <span class="text-lg">🔍</span>
+                            <div>
+                                <div class="font-medium text-sm">Auto-detect</div>
+                                <div class="text-xs text-zinc-500">We find the chain</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="bsc" onclick="selectChain('bsc', '🟡 BNB Chain')">
                             <span class="text-lg">🟡</span>
                             <div>
                                 <div class="font-medium text-sm">BNB Chain</div>
@@ -428,7 +435,7 @@
             
             <p class="text-center text-zinc-600 text-xs mt-6">
                 ⚠️ This is not financial advice. Always do your own research. 
-                Data sourced from GoPlus Security & DexScreener.
+                Data sourced from GoPlus Security, DexScreener & GeckoTerminal.
             </p>
         </div>
 
@@ -600,7 +607,7 @@
     </footer>
 
     <script>
-        let selectedChain = 'bsc';
+        let selectedChain = 'auto';
         let scanning = false;
 
         function toggleChainMenu() {
@@ -707,7 +714,15 @@
             
             // Chain badge
             const chainNames = { bsc:'🟡 BSC', eth:'🔷 ETH', base:'🔵 Base', arbitrum:'🌀 ARB', polygon:'🟣 POLY', avalanche:'🔴 AVAX', fantom:'👻 FTM', optimism:'🔴 OP', solana:'🟣 SOL' };
+            // Show detected chain
+            const chainNames = { bsc:'🟡 BSC', eth:'🔷 ETH', base:'🔵 Base', arbitrum:'🌀 ARB', polygon:'🟣 POLY', avalanche:'🔴 AVAX', fantom:'👻 FTM', optimism:'🔴 OP', solana:'🟣 SOL' };
             document.getElementById('chainBadge').textContent = chainNames[data.chain] || data.chain;
+            
+            // Update chain selector to show detected chain
+            if (selectedChain === 'auto' && data.chain) {
+                const autoLabels = { bsc:'🟡 BNB Chain', eth:'🔷 Ethereum', base:'🔵 Base', arbitrum:'🌀 Arbitrum', polygon:'🟣 Polygon', avalanche:'🔴 Avalanche', fantom:'👻 Fantom', optimism:'🔴 Optimism', solana:'🟣 Solana' };
+                document.getElementById('chainLabel').textContent = autoLabels[data.chain] || data.chain;
+            }
             
             // Token info
             document.getElementById('tokenName').textContent = data.name || 'Unknown Token';

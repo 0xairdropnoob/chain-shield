@@ -145,9 +145,65 @@ class TokenScanner:
     def __init__(self):
         self.goplus_base = "https://api.gopluslabs.io/api/v1"
         self.dexscreener_base = "https://api.dexscreener.com/latest/dex"
+        self.gecko_base = "https://api.geckoterminal.com/api/v2"
+    
+    async def detect_chain(self, address: str) -> str:
+        """Auto-detect which chain a token is on by checking all EVM chains + Solana."""
+        import re
+        
+        # Solana format: base58, no 0x prefix
+        if not re.match(r'^0x[0-9a-fA-F]{40}$', address):
+            # Check if it looks like Solana
+            if re.match(r'^[1-9A-HJ-NP-Za-km-z]{32,44}$', address):
+                return "solana"
+            return "bsc"  # fallback
+        
+        # EVM address — try chains in priority order (most popular first)
+        evm_priority = ["bsc", "eth", "base", "arbitrum", "polygon", "avalanche", "fantom", "optimism"]
+        
+        async with httpx.AsyncClient(timeout=10) as client:
+            for chain_id in evm_priority:
+                try:
+                    goplus_chain = CHAINS[chain_id]["goplus_id"]
+                    url = f"{self.goplus_base}/token_security/{goplus_chain}?contract_addresses={address.lower()}"
+                    resp = await client.get(url)
+                    data = resp.json()
+                    result = data.get("result", {})
+                    token_data = result.get(address.lower(), {})
+                    
+                    # If we get any meaningful data, this is the right chain
+                    if token_data and token_data.get("token_name"):
+                        return chain_id
+                except Exception:
+                    continue
+            
+            # If GoPlus didn't find it, try DexScreener (it detects chain automatically)
+            try:
+                url = f"{self.dexscreener_base}/tokens/{address}"
+                resp = await client.get(url)
+                data = resp.json()
+                pairs = data.get("pairs", [])
+                if pairs:
+                    detected_chain = pairs[0].get("chainId", "")
+                    # Map dexscreener chainId to our chain keys
+                    chain_map = {
+                        "bsc": "bsc", "ethereum": "eth", "base": "base",
+                        "arbitrum": "arbitrum", "polygon": "polygon",
+                        "avalanche": "avalanche", "fantom": "fantom",
+                        "optimism": "optimism", "solana": "solana"
+                    }
+                    return chain_map.get(detected_chain, "bsc")
+            except Exception:
+                pass
+        
+        return "bsc"  # ultimate fallback
     
     async def scan_token(self, address: str, chain: str = "bsc") -> TokenReport:
         """Main scan entry point — gathers all data and computes safety score."""
+        # Auto-detect chain if not specified or if "auto"
+        if chain == "auto":
+            chain = await self.detect_chain(address)
+        
         report = TokenReport(address=address, chain=chain)
         
         # Validate chain
@@ -168,15 +224,17 @@ class TokenScanner:
         # Run all checks in parallel
         goplus_task = self._check_goplus(address, chain)
         dex_task = self._check_dexscreener(address, chain)
+        gecko_task = self._check_geckoterminal(address, chain)
         
-        goplus_data, dex_data = await asyncio.gather(
-            goplus_task, dex_task,
+        goplus_data, dex_data, gecko_data = await asyncio.gather(
+            goplus_task, dex_task, gecko_task,
             return_exceptions=True
         )
         
         # Track data sources
         has_goplus = False
         has_dex = False
+        has_gecko = False
         
         # Process GoPlus data
         if not isinstance(goplus_data, Exception) and goplus_data:
@@ -189,6 +247,12 @@ class TokenScanner:
             self._process_dexscreener(report, dex_data)
             has_dex = True
             report.data_sources.append("DexScreener")
+        
+        # Process GeckoTerminal data
+        if not isinstance(gecko_data, Exception) and gecko_data:
+            self._process_geckoterminal(report, gecko_data)
+            has_gecko = True
+            report.data_sources.append("GeckoTerminal")
         
         # Check if we have enough data
         if not has_goplus and not has_dex:
@@ -375,6 +439,63 @@ class TokenScanner:
         
         # Pair info
         report.pair_created = data.get("pairCreatedAt", "")
+    
+    async def _check_geckoterminal(self, address: str, chain: str) -> dict:
+        """Check token via GeckoTerminal API (free, no key needed)."""
+        # GeckoTerminal chain network slugs
+        gecko_networks = {
+            "bsc": "bsc", "eth": "ethereum", "base": "base",
+            "arbitrum": "arbitrum", "polygon": "polygon",
+            "avalanche": "avax", "fantom": "fantom",
+            "optimism": "optimism", "solana": "solana"
+        }
+        network = gecko_networks.get(chain, "bsc")
+        url = f"{self.gecko_base}/networks/{network}/tokens/{address}"
+        
+        async with httpx.AsyncClient(timeout=15) as client:
+            try:
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return data.get("data", {})
+            except Exception:
+                pass
+        return {}
+    
+    def _process_geckoterminal(self, report: TokenReport, data: dict):
+        """Process GeckoTerminal data into report."""
+        attrs = data.get("attributes", {})
+        if not attrs:
+            return
+        
+        report.raw_data["geckoterminal"] = attrs
+        
+        # Price (if not already set from DexScreener)
+        if not report.price_usd:
+            try:
+                report.price_usd = float(attrs.get("price_usd", 0))
+            except (ValueError, TypeError):
+                pass
+        
+        # Market cap (if not already set)
+        if not report.market_cap:
+            try:
+                report.market_cap = float(attrs.get("market_cap_usd", 0) or 0)
+            except (ValueError, TypeError):
+                pass
+        
+        # Volume (if not already set)
+        if not report.volume_24h:
+            try:
+                report.volume_24h = float(attrs.get("volume_usd", {}).get("h24", 0) or 0)
+            except (ValueError, TypeError):
+                pass
+        
+        # Liquidity
+        if report.liquidity_locked is None:
+            liq = attrs.get("liquidity_usd", {})
+            if liq:
+                report.positives.append(f"💧 Liquidity: ${float(liq or 0):,.0f}")
     
     def _compute_score(self, report: TokenReport):
         """Compute safety score 0-100. Higher = safer."""
