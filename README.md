@@ -1,4 +1,4 @@
-# 🛡️ Chain Shield — Sentinel
+# 🛡️ Chain Sentinel
 
 **Token Safety Scanner** — Detect honeypots, rugpulls, and scams across 9 blockchain networks.
 
@@ -12,6 +12,14 @@
 - 📱 **Responsive UI** — Dark theme, mobile-friendly
 - ⚠️ **Unknown Token Handling** — Shows "UNKNOWN" risk for tokens with insufficient data
 
+## Pricing
+
+| Plan | Price | Features |
+|------|-------|----------|
+| **Free** | $0/forever | 20 scans/min, basic report, 9 chains |
+| **Pro** | $5/month | Unlimited scans, API access, wallet monitoring |
+| **Enterprise** | $25/month | Everything in Pro + unlimited API + white-label |
+
 ## Tech Stack
 
 - **Backend:** Python FastAPI
@@ -23,7 +31,7 @@
 
 ```bash
 # Clone
-git clone https://github.com/yourusername/chain-shield.git
+git clone https://github.com/0xairdropnoob/chain-shield.git
 cd chain-shield
 
 # Setup
@@ -37,7 +45,15 @@ python3 app.py
 
 Visit `http://localhost:8888`
 
-## API
+## API Documentation
+
+### Authentication
+
+Include your API key in the request headers:
+
+```
+X-API-Key: your_api_key_here
+```
 
 ### POST `/api/scan`
 
@@ -66,6 +82,30 @@ Visit `http://localhost:8888`
 }
 ```
 
+### POST `/api/keys/generate`
+
+Generate a new API key:
+
+```json
+{
+  "user_id": "user123",
+  "plan": "pro"
+}
+```
+
+### GET `/api/keys/validate`
+
+Validate an API key:
+
+```
+GET /api/keys/validate
+X-API-Key: your_api_key_here
+```
+
+### GET `/api/plans`
+
+Get available plans and their limits.
+
 ## Supported Chains
 
 | Chain | Chain ID |
@@ -80,14 +120,54 @@ Visit `http://localhost:8888`
 | 🔴 Optimism | `optimism` |
 | 🟣 Solana | `solana` |
 
+## Deployment
+
+### Vercel (Recommended)
+
+1. Install Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. Deploy:
+   ```bash
+   vercel --prod
+   ```
+
+3. Configure your domain in Vercel dashboard.
+
+### Manual Deployment
+
+1. Build the application:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run with uvicorn:
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8888
+   ```
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SMTP_HOST` | SMTP server for contact form | No |
+| `SMTP_PORT` | SMTP port | No |
+| `SMTP_USER` | SMTP username | No |
+| `SMTP_PASS` | SMTP password | No |
+
 ## Roadmap
 
-- [ ] Ethereum support
-- [ ] Wallet monitoring + alerts
+- [x] Token safety scanner
+- [x] Honeypot detection
+- [x] Multi-chain support
+- [x] API key system
+- [x] Pricing tiers
+- [ ] Wallet monitoring
 - [ ] Historical scan data
-- [ ] Premium tier (unlimited scans)
 - [ ] Browser extension
-- [ ] API key system
+- [ ] Telegram bot
 
 ## License
 
