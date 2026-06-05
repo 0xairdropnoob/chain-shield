@@ -1,0 +1,32 @@
+# Chain Sentinel Twitter Reply Bot Configuration
+# -----------------------------------------------
+
+# How often (in seconds) to poll for new tweets
+search_interval: 300
+
+# Maximum replies to post per hour (rate limit)
+max_replies_per_hour: 10
+
+# Only reply to accounts with at least this many followers
+min_followers: 50
+
+# Chain Sentinel scan API endpoint
+scan_api_url: "https://chainshieldsentinel.tech/api/scan"
+
+# Search queries to find tweets with contract addresses
+search_queries:
+  - "0x is this legit"
+  - "0x rug pull"
+  - "0x safe to buy"
+  - "0x contract address"
+  - "0x token review"
+
+# Dry-run mode: true = log only, don't post replies
+# SET TO false ONLY WHEN READY
+dry_run: true
+
+# File to track already-replied tweet IDs
+replied_log_file: "replied_tweets.json"
+
+# Log file
+log_file: "reply_bot.log"

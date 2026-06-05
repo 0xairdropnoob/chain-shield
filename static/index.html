@@ -459,6 +459,20 @@
                 ⚠️ This is not financial advice. Always do your own research. 
                 Data sourced from GoPlus Security, DexScreener & GeckoTerminal.
             </p>
+            
+            <!-- Share Report Button -->
+            <div id="shareSection" class="hidden mt-6 flex flex-wrap justify-center gap-3">
+                <button onclick="generateShareCard()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold text-sm cursor-pointer">
+                    📤 Share Report
+                </button>
+                <button onclick="downloadShareCard()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all font-semibold text-sm cursor-pointer" id="downloadBtn" style="display:none">
+                    💾 Download Image
+                </button>
+                <button onclick="copyShareCard()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all font-semibold text-sm cursor-pointer" id="copyBtn" style="display:none">
+                    📋 Copy to Clipboard
+                </button>
+            </div>
+            <canvas id="shareCanvas" width="600" height="400" style="display:none"></canvas>
         </div>
 
         <!-- Empty State -->
@@ -984,6 +998,10 @@
             }
             
             document.getElementById('results').classList.remove('hidden');
+            document.getElementById('shareSection').classList.remove('hidden');
+            document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('copyBtn').style.display = 'none';
+            window._lastScanData = data;
         }
 
 
@@ -1039,6 +1057,126 @@
                 btn.textContent = '✉️ Send Message';
             }
         });
+
+        // ===== SCAN & SHARE CARD GENERATOR =====
+        function generateShareCard() {
+            const data = window._lastScanData;
+            if (!data) return;
+
+            const canvas = document.getElementById('shareCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 600;
+            canvas.height = 400;
+
+            // Background gradient
+            const grad = ctx.createLinearGradient(0, 0, 600, 400);
+            grad.addColorStop(0, '#0f0f1a');
+            grad.addColorStop(1, '#1a1033');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 600, 400);
+
+            // Border
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(1, 1, 598, 398);
+
+            // Header - Brand
+            ctx.fillStyle = '#a78bfa';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('🛡️ Chain Sentinel', 24, 36);
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('chainshieldsentinel.tech', 24, 54);
+
+            // Score circle
+            const score = data.safety_score || 0;
+            const riskLevel = data.risk_level || 'UNKNOWN';
+            let scoreColor, riskColor;
+            if (riskLevel === 'UNKNOWN') { scoreColor = '#6b7280'; riskColor = '#6b7280'; }
+            else if (score >= 80) { scoreColor = '#22c55e'; riskColor = '#22c55e'; }
+            else if (score >= 60) { scoreColor = '#eab308'; riskColor = '#eab308'; }
+            else { scoreColor = '#ef4444'; riskColor = '#ef4444'; }
+
+            // Score
+            ctx.fillStyle = scoreColor;
+            ctx.font = 'bold 64px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(riskLevel === 'UNKNOWN' ? '?' : score.toString(), 300, 140);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#9ca3af';
+            ctx.fillText('/100', 300, 160);
+
+            // Risk level badge
+            ctx.fillStyle = riskColor;
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(riskLevel, 300, 185);
+
+            // Token info
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px sans-serif';
+            const tokenName = (data.name || 'Unknown Token').substring(0, 28);
+            ctx.fillText(tokenName, 24, 230);
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '14px sans-serif';
+            const symbol = data.symbol || '???';
+            const chain = (data.chain || '').toUpperCase();
+            ctx.fillText(`${symbol} • ${chain}`, 24, 252);
+
+            // Stats grid
+            const stats = [
+                { label: 'Honeypot', value: data.is_honeypot ? '⚠️ Yes' : '✅ No' },
+                { label: 'Can Sell', value: data.can_sell ? '✅ Yes' : '❌ No' },
+                { label: 'Buy Tax', value: (data.buy_tax || 0) + '%' },
+                { label: 'Sell Tax', value: (data.sell_tax || 0) + '%' }
+            ];
+
+            let y = 280;
+            stats.forEach((stat, i) => {
+                const x = 24 + (i % 2) * 280;
+                if (i === 2) y = 310;
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(stat.label, x, y);
+                ctx.fillStyle = '#e5e7eb';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(stat.value, x + 80, y);
+            });
+
+            // Footer
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Scan before you buy → chainshieldsentinel.tech', 300, 380);
+
+            // Show download/copy buttons
+            document.getElementById('downloadBtn').style.display = 'inline-flex';
+            document.getElementById('copyBtn').style.display = 'inline-flex';
+        }
+
+        function downloadShareCard() {
+            const canvas = document.getElementById('shareCanvas');
+            const link = document.createElement('a');
+            link.download = 'chain-sentinel-scan.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        async function copyShareCard() {
+            const canvas = document.getElementById('shareCanvas');
+            try {
+                canvas.toBlob(async (blob) => {
+                    await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+                    const btn = document.getElementById('copyBtn');
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; }, 2000);
+                }, 'image/png');
+            } catch (err) {
+                // Fallback: download instead
+                downloadShareCard();
+            }
+        }
     </script>
 
 </body>
