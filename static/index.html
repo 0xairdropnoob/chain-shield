@@ -1020,7 +1020,7 @@
             return n.toFixed(6);
         }
 
-        // Contact form
+        // Contact form — via Formspree (free, no backend needed)
         document.getElementById('contactForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('contactSubmitBtn');
@@ -1031,15 +1031,10 @@
             const data = new FormData(form);
             
             try {
-                const resp = await fetch('/api/contact', {
+                const resp = await fetch('https://formspree.io/f/xdkogkpv', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: data.get('name'),
-                        email: data.get('email'),
-                        subject: data.get('subject'),
-                        message: data.get('message')
-                    })
+                    body: data,
+                    headers: { 'Accept': 'application/json' }
                 });
                 
                 if (resp.ok) {
