@@ -758,7 +758,14 @@
                 <h3 class="text-xl font-bold text-center mb-2">Get in Touch</h3>
                 <p class="text-zinc-500 text-sm text-center mb-6">Bug reports, feature requests, partnerships, or just say hello.</p>
                 
-                <form id="contactForm" class="max-w-lg mx-auto space-y-4">
+                <form id="contactForm" action="https://formsubmit.co/info@chainshieldsentinel.tech" method="POST" class="max-w-lg mx-auto space-y-4">
+                    <!-- Formsubmit.co config -->
+                    <input type="hidden" name="_subject" value="[Chain Sentinel] New Contact Message">
+                    <input type="hidden" name="_captcha" value="true">
+                    <input type="hidden" name="_template" value="table">
+                    <input type="hidden" name="_next" value="https://chainshieldsentinel.tech/?submitted=true">
+                    <!-- Honeypot anti-spam -->
+                    <input type="text" name="_honey" style="display:none">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input type="text" name="name" placeholder="Your name" class="contact-input" required>
                         <input type="email" name="email" placeholder="Your email" class="contact-input" required>
@@ -773,9 +780,6 @@
                     </div>
                     <div id="contactSuccess" class="hidden text-center py-4">
                         <p class="text-green-400 font-semibold">✅ Message sent! We'll get back to you soon.</p>
-                    </div>
-                    <div id="contactError" class="hidden text-center py-4">
-                        <p class="text-red-400 font-semibold">❌ Failed to send. Please email us directly at info@chainshieldsentinel.tech</p>
                     </div>
                 </form>
             </div>
@@ -1020,27 +1024,12 @@
             return n.toFixed(6);
         }
 
-        // Contact form — opens email client directly (mailto)
-        document.getElementById('contactForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const name = form.querySelector('[name="name"]').value;
-            const email = form.querySelector('[name="email"]').value;
-            const subject = form.querySelector('[name="subject"]').value;
-            const message = form.querySelector('[name="message"]').value;
-            
-            // Build mailto link
-            const body = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
-            const mailtoUrl = `mailto:info@chainshieldsentinel.tech?subject=${encodeURIComponent('[Chain Sentinel] ' + subject)}&body=${encodeURIComponent(body)}`;
-            
-            // Open email client
-            window.location.href = mailtoUrl;
-            
-            // Show success message
+        // Contact form — show success after Formsubmit redirect
+        if (window.location.search.includes('submitted=true')) {
             document.getElementById('contactSuccess').classList.remove('hidden');
-            document.getElementById('contactError').classList.add('hidden');
-            form.reset();
-        });
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
         // ===== SCAN & SHARE CARD GENERATOR =====
         function generateShareCard() {
