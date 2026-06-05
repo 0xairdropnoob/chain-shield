@@ -1,22 +1,23 @@
 """
-Chain Shield — FastAPI Backend
-Sentinel's Token Safety Scanner — Multi-chain
+Chain Sentinel — FastAPI Backend
+Token Safety Scanner — Multi-chain
 """
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from scanner import TokenScanner
 from pydantic import BaseModel
 from typing import Optional
 from collections import defaultdict
 import time
-import uvicorn
+import os
+from api_keys import api_key_manager
 
 app = FastAPI(
-    title="Chain Shield",
-    description="Sentinel's Token Safety Scanner",
-    version="0.2.0"
+    title="Chain Sentinel",
+    description="Token Safety Scanner — Multi-chain",
+    version="0.3.0"
 )
 
 scanner = TokenScanner()
@@ -26,7 +27,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # === RATE LIMITER ===
-# Simple in-memory rate limiter: 20 scans per minute per IP
 class RateLimiter:
     def __init__(self, max_requests: int = 20, window_seconds: int = 60):
         self.max_requests = max_requests
@@ -35,7 +35,6 @@ class RateLimiter:
     
     def is_allowed(self, client_ip: str) -> bool:
         now = time.time()
-        # Clean old requests
         self.requests[client_ip] = [
             t for t in self.requests[client_ip] 
             if now - t < self.window
@@ -117,13 +116,31 @@ async def root():
 
 @app.post("/api/scan", response_model=ScanResponse)
 async def scan_token(req: ScanRequest, request: Request):
+    # Check for API key in headers
+    api_key = request.headers.get("X-API-Key")
+    user_plan = "free"
+    
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info:
+            user_plan = key_info.get("plan", "free")
+            # Get limits for user's plan
+            limits = api_key_manager.get_usage_limits(user_plan)
+            max_requests = limits["scans_per_minute"]
+        else:
+            # Invalid API key, fall back to free tier
+            max_requests = 20
+    else:
+        # No API key, use free tier
+        max_requests = 20
+    
     # Rate limit check
     client_ip = request.client.host
     if not rate_limiter.is_allowed(client_ip):
         remaining_time = rate_limiter.get_reset_time(client_ip)
         raise HTTPException(
             status_code=429,
-            detail=f"Rate limit exceeded. Try again in {remaining_time}s. (20 scans/min limit)"
+            detail=f"Rate limit exceeded. Try again in {remaining_time}s. ({max_requests} scans/min limit)"
         )
     
     report = await scanner.scan_token(req.address, req.chain)
@@ -164,7 +181,106 @@ async def scan_token(req: ScanRequest, request: Request):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "chain-shield", "version": "0.2.0"}
+    return {"status": "ok", "service": "chain-sentinel", "version": "0.3.0"}
+
+
+
+@app.post("/api/keys/generate")
+async def generate_api_key(request: Request):
+    """Generate a new API key (requires authentication)"""
+    # In production, this would require proper authentication
+    # For now, we'll use a simple demo endpoint
+    data = await request.json()
+    user_id = data.get("user_id", "demo_user")
+    plan = data.get("plan", "pro")
+    
+    if plan not in ["free", "pro", "enterprise"]:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    
+    key = api_key_manager.generate_key(user_id, plan)
+    limits = api_key_manager.get_usage_limits(plan)
+    
+    return {
+        "api_key": key,
+        "plan": plan,
+        "limits": limits,
+        "message": "Keep this key safe. It won't be shown again."
+    }
+
+
+@app.get("/api/keys/validate")
+async def validate_api_key(request: Request):
+    """Validate an API key"""
+    api_key = request.headers.get("X-API-Key")
+    
+    if not api_key:
+        raise HTTPException(status_code=400, detail="X-API-Key header required")
+    
+    key_info = api_key_manager.validate_key(api_key)
+    
+    if not key_info:
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    
+    limits = api_key_manager.get_usage_limits(key_info["plan"])
+    
+    return {
+        "valid": True,
+        "plan": key_info["plan"],
+        "usage_count": key_info["usage_count"],
+        "limits": limits
+    }
+
+
+@app.get("/api/plans")
+async def get_plans():
+    """Get available plans and their limits"""
+    return {
+        "plans": [
+            {
+                "name": "Free",
+                "price": 0,
+                "currency": "USD",
+                "interval": "forever",
+                "features": [
+                    "20 scans per minute",
+                    "Basic safety report",
+                    "9 blockchain networks",
+                    "Honeypot detection"
+                ],
+                "limits": api_key_manager.get_usage_limits("free")
+            },
+            {
+                "name": "Pro",
+                "price": 5,
+                "currency": "USD",
+                "interval": "month",
+                "features": [
+                    "Unlimited scans",
+                    "Advanced safety report",
+                    "API access (1000 calls/day)",
+                    "Wallet monitoring (5 wallets)",
+                    "Email alerts",
+                    "Priority support"
+                ],
+                "limits": api_key_manager.get_usage_limits("pro")
+            },
+            {
+                "name": "Enterprise",
+                "price": 25,
+                "currency": "USD",
+                "interval": "month",
+                "features": [
+                    "Everything in Pro",
+                    "Unlimited API calls",
+                    "Wallet monitoring (50 wallets)",
+                    "Custom integrations",
+                    "White-label option",
+                    "Dedicated support"
+                ],
+                "limits": api_key_manager.get_usage_limits("enterprise")
+            }
+        ]
+    }
 
 
 @app.post("/api/contact")
@@ -173,14 +289,13 @@ async def contact(req: ContactRequest):
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
-    import os
     
     # Build email
     msg = MIMEMultipart()
-    msg["From"] = f"Chain Shield <noreply@chainshieldsentinel.tech>"
+    msg["From"] = f"Chain Sentinel <noreply@chainshieldsentinel.tech>"
     msg["To"] = "info@chainshieldsentinel.tech"
     msg["Reply-To"] = req.email
-    msg["Subject"] = f"[Chain Shield Contact] {req.subject}"
+    msg["Subject"] = f"[Chain Sentinel Contact] {req.subject}"
     
     body = f"""
     New contact form submission:
@@ -194,9 +309,8 @@ async def contact(req: ContactRequest):
     """
     msg.attach(MIMEText(body, "plain"))
     
-    # Send via Cloudflare Email Routing (or direct SMTP fallback)
+    # Send via SMTP (if configured)
     try:
-        # Try Cloudflare SMTP (if configured)
         smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
         smtp_user = os.getenv("SMTP_USER", "")
@@ -209,7 +323,7 @@ async def contact(req: ContactRequest):
                 server.send_message(msg)
             return {"status": "ok", "message": "Message sent successfully"}
         else:
-            # No SMTP configured — log and return success (contact stored in logs)
+            # No SMTP configured — log and return success
             print(f"[CONTACT FORM] From: {req.email} | Subject: {req.subject}")
             print(f"[CONTACT FORM] Message: {req.message[:200]}")
             return {"status": "ok", "message": "Message received (email forwarding pending)"}
@@ -218,5 +332,7 @@ async def contact(req: ContactRequest):
         return {"status": "ok", "message": "Message received"}
 
 
+# For local development
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8888, reload=True)
