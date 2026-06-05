@@ -1020,37 +1020,26 @@
             return n.toFixed(6);
         }
 
-        // Contact form — via Formspree (free, no backend needed)
-        document.getElementById('contactForm').addEventListener('submit', async (e) => {
+        // Contact form — opens email client directly (mailto)
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const btn = document.getElementById('contactSubmitBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Sending...';
-            
             const form = e.target;
-            const data = new FormData(form);
+            const name = form.querySelector('[name="name"]').value;
+            const email = form.querySelector('[name="email"]').value;
+            const subject = form.querySelector('[name="subject"]').value;
+            const message = form.querySelector('[name="message"]').value;
             
-            try {
-                const resp = await fetch('https://formspree.io/f/xdkogkpv', {
-                    method: 'POST',
-                    body: data,
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (resp.ok) {
-                    document.getElementById('contactSuccess').classList.remove('hidden');
-                    document.getElementById('contactError').classList.add('hidden');
-                    form.reset();
-                } else {
-                    throw new Error('Failed');
-                }
-            } catch (err) {
-                document.getElementById('contactError').classList.remove('hidden');
-                document.getElementById('contactSuccess').classList.add('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '✉️ Send Message';
-            }
+            // Build mailto link
+            const body = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+            const mailtoUrl = `mailto:info@chainshieldsentinel.tech?subject=${encodeURIComponent('[Chain Sentinel] ' + subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Open email client
+            window.location.href = mailtoUrl;
+            
+            // Show success message
+            document.getElementById('contactSuccess').classList.remove('hidden');
+            document.getElementById('contactError').classList.add('hidden');
+            form.reset();
         });
 
         // ===== SCAN & SHARE CARD GENERATOR =====
