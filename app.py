@@ -17,7 +17,9 @@ from api_keys import api_key_manager
 app = FastAPI(
     title="Chain Sentinel",
     description="Token Safety Scanner — Multi-chain",
-    version="0.3.0"
+    version="0.3.0",
+    docs_url=None,
+    redoc_url=None
 )
 
 scanner = TokenScanner()
