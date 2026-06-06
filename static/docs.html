@@ -59,6 +59,7 @@
         }
         .method-get { background: rgba(34,197,94,0.15); color: #4ade80; }
         .method-post { background: rgba(99,102,241,0.15); color: #818cf8; }
+        .method-delete { background: rgba(239,68,68,0.15); color: #f87171; }
         
         .endpoint-card {
             background: rgba(255,255,255,0.02);
@@ -197,16 +198,29 @@
             <a href="#health" class="nav-link">Health Check</a>
         </div>
         <div class="nav-group">
+            <div class="nav-label">Webhooks</div>
+            <a href="#webhooks" class="nav-link">Overview</a>
+            <a href="#webhook-create" class="nav-link">Create Webhook</a>
+            <a href="#webhook-events" class="nav-link">Events</a>
+            <a href="#webhook-signatures" class="nav-link">Signatures</a>
+        </div>
+        <div class="nav-group">
             <div class="nav-label">API Keys</div>
             <a href="#generate-key" class="nav-link">Generate Key</a>
             <a href="#validate-key" class="nav-link">Validate Key</a>
             <a href="#plans" class="nav-link">Plans & Limits</a>
         </div>
         <div class="nav-group">
+            <div class="nav-label">SDKs</div>
+            <a href="#sdk-python" class="nav-link">Python</a>
+            <a href="#sdk-javascript" class="nav-link">JavaScript / Node.js</a>
+        </div>
+        <div class="nav-group">
             <div class="nav-label">Reference</div>
             <a href="#supported-chains" class="nav-link">Supported Chains</a>
             <a href="#response-fields" class="nav-link">Response Fields</a>
             <a href="#sdks" class="nav-link">Code Examples</a>
+            <a href="/changelog" class="nav-link" style="color:#818cf8;">📋 Changelog</a>
         </div>
     </nav>
 </aside>
@@ -917,6 +931,386 @@ if check["safe"]:
 else:
     print(f"❌ Skipping: {check['reason']}")</code></pre>
                 </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Webhooks -->
+            <section id="webhooks">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">🔔 Webhooks</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Receive real-time notifications when events happen. Webhooks send HTTP POST requests to your URL 
+                    with event data and HMAC-SHA256 signatures for security.
+                </p>
+
+                <div style="padding: 14px 18px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 8px; margin-bottom: 24px;">
+                    <span style="font-size: 0.85rem; color: #818cf8; font-weight: 600;">💡 Requires Pro or Enterprise plan</span>
+                </div>
+
+                <h3 id="webhook-events" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;">Available Events</h3>
+                <table class="param-table" style="margin-bottom: 24px;">
+                    <thead>
+                        <tr><th>Event</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>scan.complete</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Fired when any scan completes</td>
+                        </tr>
+                        <tr>
+                            <td><code>scan.risk_high</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Fired when a scan returns risk level <code>danger</code> or <code>critical</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>scan.honeypot</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Fired when a honeypot is detected</td>
+                        </tr>
+                        <tr>
+                            <td><code>key.expired</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Fired when an API key expires or is deactivated</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 id="webhook-create" style="font-size: 1.1rem; font-weight: 600; margin: 24px 0 12px;">Create a Webhook</h3>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1rem; color: #e4e4e7; font-weight: 600;">/api/webhooks</code>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Request Body</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">url</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-required">required</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">HTTPS endpoint to receive payloads</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">events</span></td>
+                                <td><span class="param-type">array</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Events to subscribe. Default: <code>["scan.complete"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">description</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Human-readable description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response <span class="response-status status-200">200</span></h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Example</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "id": "wh_a1b2c3d4e5f6g7h8",
+  "url": "https://myapp.com/webhooks/chain-sentinel",
+  "events": ["scan.complete", "scan.honeypot"],
+  "secret": "whsec_xK9mN2pQ4rS6tU8vW0xY2zA4bC6dE8fG",
+  "active": true,
+  "created_at": "2025-06-06T12:00:00Z"
+}</code></pre>
+                    <div style="margin-top: 12px; padding: 10px 14px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); border-radius: 6px;">
+                        <span style="font-size: 0.82rem; color: #f87171; font-weight: 600;">⚠️ Save the <code>secret</code> — it's only shown once and needed to verify webhook signatures.</span>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1rem; font-weight: 600; margin: 24px 0 12px;">Other Webhook Endpoints</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code>/api/webhooks</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">List your webhook subscriptions</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post">POST</span></td>
+                            <td><code>/api/webhooks/{id}/test</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Send a test payload</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="background:rgba(239,68,68,0.15);color:#f87171;">DELETE</span></td>
+                            <td><code>/api/webhooks/{id}</code></td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Delete a webhook subscription</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 id="webhook-signatures" style="font-size: 1.1rem; font-weight: 600; margin: 32px 0 12px;">🔐 Verifying Signatures</h3>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 16px;">
+                    Every webhook delivery includes a <code>X-ChainSentinel-Signature</code> header containing an HMAC-SHA256 signature. 
+                    Always verify this before processing the payload.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Delivery Headers</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Header</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>X-ChainSentinel-Signature</code></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;"><code>sha256=&lt;hex&gt;</code> HMAC-SHA256 of request body</td>
+                            </tr>
+                            <tr>
+                                <td><code>X-ChainSentinel-Event</code></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Event type (e.g. <code>scan.complete</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><code>X-ChainSentinel-Delivery</code></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Unique delivery ID for idempotency</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Python — Verify Webhook Signature</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-python">import hmac
+import hashlib
+
+def verify_webhook(payload: bytes, signature: str, secret: str) -> bool:
+    """Verify a Chain Sentinel webhook signature."""
+    expected = hmac.new(
+        secret.encode("utf-8"),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(f"sha256={expected}", signature)
+
+# In your webhook handler:
+@app.post("/webhooks/chain-sentinel")
+async def handle_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("X-ChainSentinel-Signature", "")
+    event = request.headers.get("X-ChainSentinel-Event", "")
+    
+    if not verify_webhook(body, signature, "whsec_your_secret"):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+    
+    data = json.loads(body)
+    
+    if event == "scan.honeypot":
+        # Alert: honeypot detected!
+        print(f"🚨 Honeypot: {data['data']['name']}")
+    elif event == "scan.complete":
+        print(f"✅ Scan complete: {data['data']['safety_score']}/100")
+    
+    return {"status": "ok"}</code></pre>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Node.js — Verify Webhook Signature</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-javascript">const crypto = require("crypto");
+
+function verifyWebhook(body, signature, secret) {
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(body)
+    .digest("hex");
+  return signature === `sha256=${expected}`;
+}
+
+// Express.js handler
+app.post("/webhooks/chain-sentinel", (req, res) => {
+  const signature = req.headers["x-chainsentinel-signature"];
+  const event = req.headers["x-chainsentinel-event"];
+  
+  if (!verifyWebhook(JSON.stringify(req.body), signature, "whsec_your_secret")) {
+    return res.status(401).json({ error: "Invalid signature" });
+  }
+  
+  if (event === "scan.honeypot") {
+    console.log(`🚨 Honeypot: ${req.body.data.name}`);
+  }
+  
+  res.json({ status: "ok" });
+});</code></pre>
+                </div>
+
+                <h3 style="font-size: 1rem; font-weight: 600; margin: 24px 0 12px;">Webhook Payload Format</h3>
+                <div class="code-header">
+                    <span style="font-size:0.72rem;color:#71717a;">Example Payload — scan.honeypot</span>
+                </div>
+                <pre><code class="language-json">{
+  "event": "scan.honeypot",
+  "timestamp": "2025-06-06T14:30:00Z",
+  "data": {
+    "address": "0xScamToken...",
+    "chain": "bsc",
+    "name": "FakeToken",
+    "symbol": "FAKE",
+    "safety_score": 12,
+    "risk_level": "critical",
+    "is_honeypot": true,
+    "warnings": [
+      "Honeypot detected — sell function disabled",
+      "Contract not verified",
+      "Ownership not renounced"
+    ]
+  }
+}</code></pre>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- SDK: Python -->
+            <section id="sdk-python">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">🐍 Python SDK</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 16px;">
+                    Official Python package for Chain Sentinel. Type-safe, well-documented, production-ready.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">Installation</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">pip</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-bash">pip install chain-sentinel</code></pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">Quick Start</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-python">from chain_sentinel import ChainSentinel
+
+# Free tier (no API key)
+client = ChainSentinel()
+
+# Scan a token
+result = client.scan("0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82")
+print(result.summary)     # ✅ PancakeSwap Token (CAKE) — Score: 85/100 [SAFE]
+print(result.is_safe)     # True
+print(result.is_honeypot) # False
+
+# With API key
+client = ChainSentinel(api_key="cs_your_key")
+
+# Create webhook
+webhook = client.create_webhook(
+    url="https://myapp.com/webhooks",
+    events=["scan.honeypot"]
+)
+print(f"Secret: {webhook.secret}")</code></pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">All Methods</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>scan(address, chain)</code></td><td><code>ScanResult</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Scan token safety</td></tr>
+                            <tr><td><code>health()</code></td><td><code>HealthResponse</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Check API status</td></tr>
+                            <tr><td><code>validate_key()</code></td><td><code>dict</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Validate current API key</td></tr>
+                            <tr><td><code>get_plans()</code></td><td><code>List[Plan]</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Get pricing plans</td></tr>
+                            <tr><td><code>create_webhook(url, events)</code></td><td><code>WebhookInfo</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Create webhook subscription</td></tr>
+                            <tr><td><code>list_webhooks()</code></td><td><code>List[WebhookInfo]</code></td><td style="color:#a1a1aa;font-size:0.85rem;">List webhook subscriptions</td></tr>
+                            <tr><td><code>test_webhook(id)</code></td><td><code>dict</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Send test payload</td></tr>
+                            <tr><td><code>delete_webhook(id)</code></td><td><code>None</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Delete webhook</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p style="margin-top: 12px; font-size: 0.85rem; color: #71717a;">
+                    📖 Full documentation: <a href="https://github.com/0xairdropnoob/chain-shield/tree/master/sdk/python" style="color: #818cf8; text-decoration: none;">GitHub — Python SDK</a>
+                </p>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- SDK: JavaScript -->
+            <section id="sdk-javascript">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">⚡ JavaScript / Node.js SDK</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 16px;">
+                    TypeScript-first SDK with zero dependencies. Works in Node.js 18+ and modern browsers.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">Installation</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">npm</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-bash">npm install chain-sentinel</code></pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">Quick Start</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">TypeScript / ESM</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-javascript">import { ChainSentinel } from "chain-sentinel";
+
+const client = new ChainSentinel(); // Free tier
+
+const result = await client.scan(
+  "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
+);
+
+console.log(result.summary);     // ✅ PancakeSwap Token (CAKE) — Score: 85/100
+console.log(result.isSafe);      // true
+console.log(result.isHoneypot);  // false
+
+// With API key
+const pro = new ChainSentinel("cs_your_key");
+
+// Create webhook
+const webhook = await pro.createWebhook(
+  "https://myapp.com/webhooks",
+  ["scan.honeypot", "scan.risk_high"]
+);
+console.log(`Secret: ${webhook.secret}`);</code></pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">All Methods</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>scan(address, chain?)</code></td><td><code>Promise&lt;ScanResult&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Scan token safety</td></tr>
+                            <tr><td><code>health()</code></td><td><code>Promise&lt;HealthResponse&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Check API status</td></tr>
+                            <tr><td><code>validateKey()</code></td><td><code>Promise&lt;object&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Validate current API key</td></tr>
+                            <tr><td><code>getPlans()</code></td><td><code>Promise&lt;Plan[]&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Get pricing plans</td></tr>
+                            <tr><td><code>createWebhook(url, events)</code></td><td><code>Promise&lt;WebhookResponse&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Create webhook subscription</td></tr>
+                            <tr><td><code>listWebhooks()</code></td><td><code>Promise&lt;WebhookListResponse&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">List webhook subscriptions</td></tr>
+                            <tr><td><code>testWebhook(id)</code></td><td><code>Promise&lt;TestResponse&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Send test payload</td></tr>
+                            <tr><td><code>deleteWebhook(id)</code></td><td><code>Promise&lt;void&gt;</code></td><td style="color:#a1a1aa;font-size:0.85rem;">Delete webhook</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p style="margin-top: 12px; font-size: 0.85rem; color: #71717a;">
+                    📖 Full documentation: <a href="https://github.com/0xairdropnoob/chain-shield/tree/master/sdk/javascript" style="color: #818cf8; text-decoration: none;">GitHub — JavaScript SDK</a>
+                </p>
             </section>
 
             <!-- Footer -->

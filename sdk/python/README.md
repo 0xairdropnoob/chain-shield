@@ -1,0 +1,211 @@
+# Chain Sentinel — Python SDK
+
+[![PyPI version](https://img.shields.io/pypi/v/chain-sentinel)](https://pypi.org/project/chain-sentinel/)
+[![Python](https://img.shields.io/pypi/pyversions/chain-sentinel)](https://pypi.org/project/chain-sentinel/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Official Python SDK for [Chain Sentinel](https://chainshieldsentinel.tech) — Free token safety scanner across 9 blockchains.
+
+## Installation
+
+```bash
+pip install chain-sentinel
+```
+
+## Quick Start
+
+```python
+from chain_sentinel import ChainSentinel
+
+# Free tier (no API key needed)
+client = ChainSentinel()
+
+# Scan a token
+result = client.scan("0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", chain="bsc")
+
+print(result.summary)        # ✅ PancakeSwap Token (CAKE) — Score: 85/100 [SAFE]
+print(result.safety_score)   # 85
+print(result.is_honeypot)    # False
+print(result.buy_tax)        # 0.0
+print(result.is_safe)        # True
+```
+
+## With API Key (Pro/Enterprise)
+
+```python
+client = ChainSentinel(api_key="cs_your_api_key_here")
+
+# Validate your key
+info = client.validate_key()
+print(f"Plan: {info['plan']}, Usage: {info['usage_count']}")
+```
+
+## API Reference
+
+### Scanning
+
+#### `client.scan(address, chain="bsc") -> ScanResult`
+
+Scan a token for safety indicators.
+
+**Parameters:**
+- `address` (str): Token contract address
+- `chain` (str): Blockchain network. Options: `bsc`, `eth`, `base`, `arbitrum`, `polygon`, `avalanche`, `fantom`, `optimism`, `solana`
+
+**Returns:** `ScanResult` with fields:
+- `safety_score` (int): 0-100, higher is safer
+- `risk_level` (str): `safe`, `caution`, `danger`, `critical`
+- `is_honeypot` (bool): Can't sell if True
+- `can_sell` (bool): Whether selling is possible
+- `buy_tax` / `sell_tax` (float): Tax percentages
+- `owner_renounced` (bool): Contract ownership status
+- `is_verified` (bool): Source code verified
+- `liquidity_locked` (bool): LP locked status
+- `price_usd`, `volume_24h`, `market_cap` (float): Market data
+- `warnings` (list): Risk warnings found
+- `positives` (list): Positive indicators
+
+**Example:**
+```python
+result = client.scan("0xNewToken...", chain="base")
+
+if result.is_honeypot:
+    print("🚨 HONEYPOT — DO NOT BUY!")
+elif result.safety_score < 50:
+    print(f"🔴 High risk (score: {result.safety_score})")
+elif result.buy_tax > 10:
+    print(f"⚠️ High buy tax: {result.buy_tax}%")
+else:
+    print(f"✅ Looks safe — Score: {result.safety_score}")
+```
+
+### Health Check
+
+#### `client.health() -> HealthResponse`
+
+```python
+health = client.health()
+print(f"Status: {health.status}, Version: {health.version}")
+```
+
+### Plans
+
+#### `client.get_plans() -> List[Plan]`
+
+```python
+plans = client.get_plans()
+for plan in plans:
+    print(f"{plan.name}: ${plan.price}/{plan.interval}")
+```
+
+### Webhooks (Pro/Enterprise)
+
+#### `client.create_webhook(url, events, description) -> WebhookInfo`
+
+```python
+webhook = client.create_webhook(
+    url="https://myapp.com/webhooks/chain-sentinel",
+    events=["scan.complete", "scan.honeypot"],
+    description="Production alerts"
+)
+print(f"Webhook ID: {webhook.id}")
+print(f"Secret: {webhook.secret}")  # Save this for signature verification!
+```
+
+#### `client.list_webhooks() -> List[WebhookInfo]`
+
+```python
+webhooks = client.list_webhooks()
+for wh in webhooks:
+    print(f"{wh.id}: {wh.url} ({wh.delivery_count} deliveries)")
+```
+
+#### `client.test_webhook(webhook_id) -> dict`
+
+```python
+result = client.test_webhook("wh_abc123")
+print(f"Status: {result['status']}")
+```
+
+#### `client.delete_webhook(webhook_id)`
+
+```python
+client.delete_webhook("wh_abc123")
+```
+
+## Error Handling
+
+```python
+from chain_sentinel import (
+    ChainSentinel,
+    ChainSentinelError,
+    RateLimitError,
+    AuthenticationError,
+    NotFoundError,
+)
+
+client = ChainSentinel()
+
+try:
+    result = client.scan("0xToken...")
+except RateLimitError as e:
+    print(f"Rate limited! Retry after {e.retry_after}s")
+except AuthenticationError:
+    print("Invalid API key")
+except NotFoundError:
+    print("Token not found")
+except ChainSentinelError as e:
+    print(f"Error: {e} (status: {e.status_code})")
+```
+
+## Pre-Trade Safety Check
+
+```python
+from chain_sentinel import ChainSentinel
+
+def is_safe_to_buy(address: str, chain: str = "bsc",
+                   min_score: int = 60, max_tax: float = 10.0) -> dict:
+    """Check if a token is safe to buy."""
+    client = ChainSentinel()
+    result = client.scan(address, chain)
+
+    if result.is_honeypot:
+        return {"safe": False, "reason": "Honeypot detected"}
+
+    if result.safety_score < min_score:
+        return {"safe": False, "reason": f"Score {result.safety_score} < {min_score}"}
+
+    if result.buy_tax > max_tax:
+        return {"safe": False, "reason": f"Buy tax {result.buy_tax}% > {max_tax}%"}
+
+    return {"safe": True, "reason": result.summary}
+
+# Usage
+check = is_safe_to_buy("0xNewToken...")
+if check["safe"]:
+    print(f"✅ {check['reason']}")
+    # execute_buy()
+else:
+    print(f"❌ {check['reason']}")
+```
+
+## Context Manager
+
+```python
+with ChainSentinel(api_key="cs_key") as client:
+    result = client.scan("0xToken...")
+    print(result.summary)
+# Client automatically closed
+```
+
+## Requirements
+
+- Python 3.8+
+- httpx >= 0.24.0
+
+## Links
+
+- [API Documentation](https://chainshieldsentinel.tech/docs)
+- [Changelog](https://chainshieldsentinel.tech/changelog)
+- [GitHub](https://github.com/0xairdropnoob/chain-shield)
+- [Chain Sentinel](https://chainshieldsentinel.tech)

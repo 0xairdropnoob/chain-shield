@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog — Chain Sentinel</title>
+    <meta name="description" content="Chain Sentinel API changelog — track all updates, new features, and improvements.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://chainshieldsentinel.tech/changelog">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Plausible Analytics -->
+    <script defer data-domain="chainshieldsentinel.tech" src="https://plausible.io/js/script.js"></script>
+
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+        body { background: #09090b; color: #e4e4e7; }
+
+        .sidebar {
+            width: 260px;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            background: #0c0c0f;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            overflow-y: auto;
+            z-index: 50;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        .main-content { margin-left: 260px; }
+
+        .nav-group { margin-bottom: 8px; }
+        .nav-label {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #71717a; padding: 12px 20px 6px;
+        }
+        .nav-link {
+            display: block; padding: 6px 20px; font-size: 0.82rem;
+            color: #a1a1aa; text-decoration: none; transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+        .nav-link:hover { color: #e4e4e7; background: rgba(255,255,255,0.03); }
+        .nav-link.active { color: #818cf8; border-left-color: #818cf8; background: rgba(129,140,248,0.06); }
+
+        /* Timeline */
+        .timeline-line {
+            position: absolute; left: 19px; top: 0; bottom: 0; width: 2px;
+            background: linear-gradient(to bottom, #818cf8, #a78bfa, #4ade80, #fbbf24);
+        }
+        .version-dot {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 3px solid #09090b; position: absolute; left: 13px; top: 6px; z-index: 10;
+        }
+        .entry-item::before {
+            content: ''; display: inline-block; width: 6px; height: 6px;
+            border-radius: 50%; background: #52525b; margin-right: 10px;
+            flex-shrink: 0; margin-top: 8px;
+        }
+
+        /* Mobile sidebar toggle */
+        .mobile-menu-btn { display: none; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-menu-btn { display: block; }
+            .sidebar-overlay {
+                display: none; position: fixed; inset: 0;
+                background: rgba(0,0,0,0.5); z-index: 40;
+            }
+            .sidebar-overlay.open { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Mobile Menu Button -->
+<button onclick="toggleSidebar()" class="mobile-menu-btn fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#18181b] border border-white/10">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+</button>
+<div onclick="toggleSidebar()" class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div style="padding: 20px 20px 12px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <a href="/" style="text-decoration: none; color: #e4e4e7; font-weight: 800; font-size: 1rem;">
+            ⛓️ Chain Sentinel
+        </a>
+        <div style="font-size: 0.7rem; color: #71717a; margin-top: 2px;">API Changelog</div>
+    </div>
+
+    <div style="padding-top: 12px;">
+        <div class="nav-group">
+            <div class="nav-label">Versions</div>
+            <a href="#v0-4-0" class="nav-link active" data-version>v0.4.0 <span style="font-size:0.65rem; color:#4ade80; margin-left:4px;">● current</span></a>
+            <a href="#v0-3-0" class="nav-link" data-version>v0.3.0</a>
+            <a href="#v0-2-0" class="nav-link" data-version>v0.2.0</a>
+            <a href="#v0-1-0" class="nav-link" data-version>v0.1.0</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-label">Resources</div>
+            <a href="/docs.html" class="nav-link">📚 API Documentation</a>
+            <a href="/" class="nav-link">🔍 Token Scanner</a>
+            <a href="https://github.com" target="_blank" class="nav-link">🐙 GitHub</a>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div style="max-width: 800px; margin: 0 auto; padding: 40px 32px 80px;">
+
+        <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 4px;">Changelog</h1>
+        <p style="color: #71717a; font-size: 0.95rem; margin-bottom: 48px;">
+            All notable changes to the Chain Sentinel API.
+        </p>
+
+        <!-- Timeline -->
+        <div style="position: relative; padding-left: 48px;">
+            <div class="timeline-line"></div>
+
+            <!-- v0.4.0 — Current -->
+            <section id="v0-4-0" style="position: relative; padding-bottom: 56px;">
+                <div class="version-dot" style="background: #818cf8;"></div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <span style="background: rgba(129,140,248,0.15); color: #818cf8; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; padding: 4px 14px; border-radius: 9999px;">v0.4.0</span>
+                    <span style="color: #71717a; font-size: 0.85rem;">June 2025</span>
+                    <span style="background: rgba(74,222,128,0.15); color: #4ade80; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 3px 10px; border-radius: 9999px;">current</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            Rate limit headers (<code style="font-family: 'JetBrains Mono', monospace; color: #818cf8; background: rgba(129,140,248,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">X-RateLimit-*</code>) on all API responses
+                        </div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            Webhook system: subscribe, list, delete, test endpoints
+                        </div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            CORS support for cross-origin API access
+                        </div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            API Documentation page (<a href="/docs.html" style="color: #818cf8; text-decoration: underline; text-underline-offset: 2px;">/docs</a>)
+                        </div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            Changelog page (<span style="color: #818cf8;">/changelog</span>)
+                        </div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            Python SDK — <code style="font-family: 'JetBrains Mono', monospace; color: #818cf8; background: rgba(129,140,248,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">pip install chain-sentinel</code>
+                        </div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">
+                            JavaScript SDK — <code style="font-family: 'JetBrains Mono', monospace; color: #818cf8; background: rgba(129,140,248,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">npm install chain-sentinel</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- v0.3.0 -->
+            <section id="v0-3-0" style="position: relative; padding-bottom: 56px;">
+                <div class="version-dot" style="background: #a78bfa;"></div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <span style="background: rgba(167,139,250,0.15); color: #a78bfa; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; padding: 4px 14px; border-radius: 9999px;">v0.3.0</span>
+                    <span style="color: #71717a; font-size: 0.85rem;">May 2025</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">API key system (Free / Pro / Enterprise plans)</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Rate limiting — 20 req/min on free tier</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Plans endpoint with pricing info</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Contact form via Formsubmit.co</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Scan & Share card (canvas-based image generator)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- v0.2.0 -->
+            <section id="v0-2-0" style="position: relative; padding-bottom: 56px;">
+                <div class="version-dot" style="background: #4ade80;"></div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <span style="background: rgba(74,222,128,0.15); color: #4ade80; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; padding: 4px 14px; border-radius: 9999px;">v0.2.0</span>
+                    <span style="color: #71717a; font-size: 0.85rem;">April 2025</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Multi-chain support — 9 blockchains</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">GoPlus + DexScreener data integration</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Auto-detect chain from contract address</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Safety score (0–100) with risk levels</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Honeypot, rugpull, tax detection</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- v0.1.0 -->
+            <section id="v0-1-0" style="position: relative; padding-bottom: 32px;">
+                <div class="version-dot" style="background: #fbbf24;"></div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <span style="background: rgba(251,191,36,0.15); color: #fbbf24; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; padding: 4px 14px; border-radius: 9999px;">v0.1.0</span>
+                    <span style="color: #71717a; font-size: 0.85rem;">March 2025</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Initial release</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Single-chain BSC scanner</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Basic safety report</div>
+                        <div class="entry-item" style="display: flex; align-items: flex-start; font-size: 0.9rem; color: #e4e4e7;">Landing page with SEO</div>
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /timeline -->
+
+        <!-- Footer -->
+        <footer style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 64px; padding-top: 24px; display: flex; justify-content: space-between; align-items: center; color: #71717a; font-size: 0.82rem; flex-wrap: wrap; gap: 12px;">
+            <span>© 2025 Chain Sentinel</span>
+            <div style="display: flex; gap: 20px;">
+                <a href="/" style="color: #71717a; text-decoration: none;" onmouseover="this.style.color='#e4e4e7'" onmouseout="this.style.color='#71717a'">Scanner</a>
+                <a href="/docs.html" style="color: #71717a; text-decoration: none;" onmouseover="this.style.color='#e4e4e7'" onmouseout="this.style.color='#71717a'">Docs</a>
+                <a href="https://github.com" target="_blank" style="color: #71717a; text-decoration: none;" onmouseover="this.style.color='#e4e4e7'" onmouseout="this.style.color='#71717a'">GitHub</a>
+            </div>
+        </footer>
+
+    </div>
+</div>
+
+<script>
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+
+    // Active nav link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('[data-version]');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                const link = document.querySelector(`[data-version][href="#${entry.target.id}"]`);
+                if (link) link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => observer.observe(s));
+
+    // Close sidebar on link click (mobile)
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('open');
+        });
+    });
+</script>
+</body>
+</html>
