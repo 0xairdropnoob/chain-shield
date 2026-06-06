@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation — Chain Sentinel</title>
+    <meta name="description" content="Chain Sentinel API documentation. Integrate token safety scanning into your apps, bots, and dashboards.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://chainshieldsentinel.tech/docs">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <!-- Plausible Analytics -->
+    <script defer data-domain="chainshieldsentinel.tech" src="https://plausible.io/js/script.js"></script>
+
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+        body { background: #09090b; color: #e4e4e7; }
+        
+        .sidebar { 
+            width: 260px; 
+            position: fixed; 
+            top: 0; left: 0; bottom: 0;
+            background: #0c0c0f;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            overflow-y: auto;
+            z-index: 50;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        
+        .main-content { margin-left: 260px; }
+        
+        .nav-group { margin-bottom: 8px; }
+        .nav-label { 
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #71717a; padding: 12px 20px 6px;
+        }
+        .nav-link {
+            display: block; padding: 6px 20px; font-size: 0.82rem;
+            color: #a1a1aa; text-decoration: none; transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+        .nav-link:hover { color: #e4e4e7; background: rgba(255,255,255,0.03); }
+        .nav-link.active { color: #818cf8; border-left-color: #818cf8; background: rgba(129,140,248,0.06); }
+        
+        .method-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .method-get { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .method-post { background: rgba(99,102,241,0.15); color: #818cf8; }
+        
+        .endpoint-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .param-table { width: 100%; border-collapse: collapse; }
+        .param-table th { 
+            text-align: left; padding: 8px 12px; font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.06em; color: #71717a;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .param-table td { 
+            padding: 10px 12px; font-size: 0.85rem; 
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .param-name { color: #c084fc; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .param-type { color: #60a5fa; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+        .param-required { color: #f87171; font-size: 0.7rem; font-weight: 600; }
+        .param-optional { color: #71717a; font-size: 0.7rem; }
+        
+        pre { 
+            background: #0c0c0f !important; 
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px; 
+            padding: 16px !important;
+            font-size: 0.82rem !important;
+            line-height: 1.6 !important;
+        }
+        code { font-family: 'JetBrains Mono', monospace; }
+        :not(pre) > code {
+            background: rgba(255,255,255,0.06);
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 0.82rem; color: #c084fc;
+        }
+        
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-bottom: none; border-radius: 8px 8px 0 0;
+            padding: 8px 16px;
+        }
+        .code-header + pre { border-radius: 0 0 8px 8px; margin-top: 0 !important; }
+        
+        .copy-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+            color: #a1a1aa; font-size: 0.72rem; padding: 3px 10px; border-radius: 4px;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.1); color: #e4e4e7; }
+        
+        .section-divider {
+            height: 1px; background: rgba(255,255,255,0.06);
+            margin: 48px 0 32px;
+        }
+        
+        .try-it-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white; border: none; padding: 8px 16px; border-radius: 6px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .try-it-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+        
+        .response-status {
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+        }
+        .status-200 { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .status-400 { background: rgba(234,179,8,0.15); color: #fbbf24; }
+        .status-401 { background: rgba(239,68,68,0.15); color: #f87171; }
+        .status-429 { background: rgba(239,68,68,0.15); color: #f87171; }
+        
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+        }
+        
+        .hero-gradient {
+            background: radial-gradient(ellipse at top, rgba(99,102,241,0.08) 0%, transparent 60%);
+        }
+
+        /* Try-it-live panel */
+        .try-panel {
+            background: rgba(99,102,241,0.04);
+            border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 8px; padding: 16px; margin-top: 16px;
+        }
+        .try-panel input, .try-panel select {
+            background: #0c0c0f; border: 1px solid rgba(255,255,255,0.1);
+            color: #e4e4e7; padding: 8px 12px; border-radius: 6px;
+            font-size: 0.85rem; font-family: 'JetBrains Mono', monospace;
+            outline: none; width: 100%;
+        }
+        .try-panel input:focus, .try-panel select:focus {
+            border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+        }
+        .try-result {
+            background: #0c0c0f; border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px; padding: 12px; margin-top: 12px;
+            font-size: 0.8rem; max-height: 400px; overflow-y: auto;
+            display: none;
+        }
+        .try-result.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:14px;">🛡️</span>
+            </div>
+            <span style="color:#e4e4e7;font-weight:700;font-size:0.95rem;">Chain Sentinel</span>
+        </a>
+        <div style="margin-top:8px;font-size:0.7rem;color:#71717a;">API Documentation</div>
+    </div>
+
+    <nav style="padding: 12px 0;">
+        <div class="nav-group">
+            <div class="nav-label">Getting Started</div>
+            <a href="#introduction" class="nav-link active">Introduction</a>
+            <a href="#authentication" class="nav-link">Authentication</a>
+            <a href="#rate-limits" class="nav-link">Rate Limits</a>
+            <a href="#errors" class="nav-link">Errors</a>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Endpoints</div>
+            <a href="#scan-token" class="nav-link">Scan Token</a>
+            <a href="#health" class="nav-link">Health Check</a>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">API Keys</div>
+            <a href="#generate-key" class="nav-link">Generate Key</a>
+            <a href="#validate-key" class="nav-link">Validate Key</a>
+            <a href="#plans" class="nav-link">Plans & Limits</a>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Reference</div>
+            <a href="#supported-chains" class="nav-link">Supported Chains</a>
+            <a href="#response-fields" class="nav-link">Response Fields</a>
+            <a href="#sdks" class="nav-link">Code Examples</a>
+        </div>
+    </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="hero-gradient">
+        <div style="max-width: 860px; margin: 0 auto; padding: 48px 40px;">
+
+            <!-- Introduction -->
+            <section id="introduction">
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 12px;">
+                    Chain Sentinel API
+                </h1>
+                <p style="color: #a1a1aa; font-size: 1.05rem; line-height: 1.7; max-width: 640px;">
+                    Integrate token safety scanning into your trading bots, dashboards, and DeFi tools. 
+                    Detect honeypots, rugpulls, and scams across 9 blockchains with a single API call.
+                </p>
+                
+                <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                    <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:1rem;">⚡</span>
+                        <span style="font-size:0.82rem;color:#4ade80;font-weight:600;">Base URL</span>
+                        <code style="font-size:0.82rem;color:#e4e4e7;">https://chainshieldsentinel.tech</code>
+                    </div>
+                    <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:1rem;">📡</span>
+                        <span style="font-size:0.82rem;color:#818cf8;font-weight:600;">Version</span>
+                        <code style="font-size:0.82rem;color:#e4e4e7;">0.3.0</code>
+                    </div>
+                </div>
+
+                <div style="margin-top: 32px; padding: 16px 20px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 8px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span>🚀</span>
+                        <span style="font-weight:600;font-size:0.9rem;">Quick Start</span>
+                    </div>
+                    <p style="font-size:0.85rem;color:#a1a1aa;margin-bottom:12px;">Scan a token in 5 seconds — no API key needed for free tier.</p>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">cURL</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-bash">curl -X POST https://chainshieldsentinel.tech/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", "chain": "bsc"}'</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Authentication -->
+            <section id="authentication">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Authentication</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    The API supports two modes: <strong style="color:#e4e4e7;">free access</strong> (no key needed, 20 scans/min) 
+                    and <strong style="color:#e4e4e7;">authenticated access</strong> (API key in header, higher limits).
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">Using an API Key</h3>
+                    <p style="font-size: 0.85rem; color: #a1a1aa; margin-bottom: 16px;">
+                        Pass your API key in the <code>X-API-Key</code> header with every request.
+                    </p>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Header</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-bash">X-API-Key: cs_your_api_key_here</code></pre>
+                    
+                    <div class="code-header" style="margin-top: 12px;">
+                        <span style="font-size:0.72rem;color:#71717a;">cURL Example</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-bash">curl -X POST https://chainshieldsentinel.tech/api/scan \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: cs_your_api_key_here" \
+  -d '{"address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", "chain": "bsc"}'</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Rate Limits -->
+            <section id="rate-limits">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Rate Limits</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Rate limits are per IP address. When exceeded, the API returns <code>429 Too Many Requests</code>.
+                </p>
+
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Scans/Min</th>
+                            <th>API Calls/Day</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="color:#4ade80;font-weight:600;">Free</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">20</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
+                            <td style="color:#4ade80;font-weight:600;">$0</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color:#818cf8;font-weight:600;">Pro</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">1,000</td>
+                            <td style="color:#818cf8;font-weight:600;">$5/mo</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color:#c084fc;font-weight:600;">Enterprise</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
+                            <td style="color:#c084fc;font-weight:600;">$25/mo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Errors -->
+            <section id="errors">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Errors</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    The API uses standard HTTP status codes. Errors return a JSON body with a <code>detail</code> field.
+                </p>
+
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Code</th><th>Meaning</th><th>Common Cause</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="response-status status-200">200</span></td>
+                            <td>Success</td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Request processed successfully</td>
+                        </tr>
+                        <tr>
+                            <td><span class="response-status status-400">400</span></td>
+                            <td>Bad Request</td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Invalid address or chain parameter</td>
+                        </tr>
+                        <tr>
+                            <td><span class="response-status status-401">401</span></td>
+                            <td>Unauthorized</td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Invalid or inactive API key</td>
+                        </tr>
+                        <tr>
+                            <td><span class="response-status status-429">429</span></td>
+                            <td>Rate Limited</td>
+                            <td style="color:#a1a1aa;font-size:0.85rem;">Too many requests — slow down</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 16px;">
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Error Response Example</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "detail": "Rate limit exceeded. Try again in 45s. (20 scans/min limit)"
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- POST /api/scan -->
+            <section id="scan-token">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/scan</code>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Scan a token contract for safety indicators. Returns a comprehensive safety report including 
+                    honeypot detection, tax analysis, liquidity status, and a 0-100 safety score.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Request Body</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">address</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-required">required</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Token contract address</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">chain</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Blockchain network. Default: <code>bsc</code>. Options: <code>bsc</code>, <code>eth</code>, <code>base</code>, <code>arbitrum</code>, <code>polygon</code>, <code>avalanche</code>, <code>fantom</code>, <code>optimism</code>, <code>solana</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response <span class="response-status status-200">200</span></h3>
+                    
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="param-name">address</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Contract address</td></tr>
+                            <tr><td><span class="param-name">chain</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Blockchain network</td></tr>
+                            <tr><td><span class="param-name">name</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Token name</td></tr>
+                            <tr><td><span class="param-name">symbol</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Token symbol</td></tr>
+                            <tr><td><span class="param-name">safety_score</span></td><td><span class="param-type">integer</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Safety score 0-100 (higher = safer)</td></tr>
+                            <tr><td><span class="param-name">risk_level</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;"><code>safe</code>, <code>caution</code>, <code>danger</code>, or <code>critical</code></td></tr>
+                            <tr><td><span class="param-name">is_honeypot</span></td><td><span class="param-type">boolean</span></td><td style="color:#a1a1aa;font-size:0.85rem;">True if token is a honeypot (can't sell)</td></tr>
+                            <tr><td><span class="param-name">can_sell</span></td><td><span class="param-type">boolean</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Whether selling is possible</td></tr>
+                            <tr><td><span class="param-name">buy_tax</span></td><td><span class="param-type">float</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Buy tax percentage (0-100)</td></tr>
+                            <tr><td><span class="param-name">sell_tax</span></td><td><span class="param-type">float</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Sell tax percentage (0-100)</td></tr>
+                            <tr><td><span class="param-name">owner_renounced</span></td><td><span class="param-type">boolean</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Whether contract ownership is renounced</td></tr>
+                            <tr><td><span class="param-name">owner_address</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Contract owner address</td></tr>
+                            <tr><td><span class="param-name">is_verified</span></td><td><span class="param-type">boolean</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Whether source code is verified on explorer</td></tr>
+                            <tr><td><span class="param-name">is_proxy</span></td><td><span class="param-type">boolean</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Whether contract uses a proxy pattern</td></tr>
+                            <tr><td><span class="param-name">liquidity_locked</span></td><td><span class="param-type">boolean</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Whether liquidity is locked</td></tr>
+                            <tr><td><span class="param-name">lock_platform</span></td><td><span class="param-type">string</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Platform where liquidity is locked (e.g. "PancakeSwap")</td></tr>
+                            <tr><td><span class="param-name">price_usd</span></td><td><span class="param-type">float</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Current price in USD</td></tr>
+                            <tr><td><span class="param-name">volume_24h</span></td><td><span class="param-type">float</span></td><td style="color:#a1a1aa;font-size:0.85rem;">24-hour trading volume in USD</td></tr>
+                            <tr><td><span class="param-name">market_cap</span></td><td><span class="param-type">float</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Market capitalization in USD</td></tr>
+                            <tr><td><span class="param-name">holders</span></td><td><span class="param-type">integer</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Number of token holders</td></tr>
+                            <tr><td><span class="param-name">data_sources</span></td><td><span class="param-type">array</span></td><td style="color:#a1a1aa;font-size:0.85rem;">Data sources used (e.g. ["GoPlus", "DexScreener"])</td></tr>
+                            <tr><td><span class="param-name">warnings</span></td><td><span class="param-type">array</span></td><td style="color:#a1a1aa;font-size:0.85rem;">List of risk warnings found</td></tr>
+                            <tr><td><span class="param-name">positives</span></td><td><span class="param-type">array</span></td><td style="color:#a1a1aa;font-size:0.85rem;">List of positive indicators</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Try It Live -->
+                <div class="try-panel" id="try-scan">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <span style="font-size:0.85rem;font-weight:600;color:#818cf8;">🧪 Try It Live</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
+                        <div>
+                            <label style="font-size:0.72rem;color:#71717a;display:block;margin-bottom:4px;">Contract Address</label>
+                            <input type="text" id="scan-address" placeholder="0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82" value="0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82">
+                        </div>
+                        <div>
+                            <label style="font-size:0.72rem;color:#71717a;display:block;margin-bottom:4px;">Chain</label>
+                            <select id="scan-chain">
+                                <option value="bsc" selected>BSC</option>
+                                <option value="eth">Ethereum</option>
+                                <option value="base">Base</option>
+                                <option value="arbitrum">Arbitrum</option>
+                                <option value="polygon">Polygon</option>
+                                <option value="avalanche">Avalanche</option>
+                                <option value="fantom">Fantom</option>
+                                <option value="optimism">Optimism</option>
+                                <option value="solana">Solana</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <button class="try-it-btn" onclick="tryScan()">▶ Send Request</button>
+                        <span id="scan-status" style="margin-left:12px;font-size:0.8rem;color:#71717a;"></span>
+                    </div>
+                    <div class="try-result" id="scan-result"></div>
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Example Response</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+  "chain": "bsc",
+  "name": "PancakeSwap Token",
+  "symbol": "CAKE",
+  "safety_score": 85,
+  "risk_level": "safe",
+  "is_honeypot": false,
+  "can_sell": true,
+  "buy_tax": 0.0,
+  "sell_tax": 0.0,
+  "owner_renounced": true,
+  "owner_address": "0x0000000000000000000000000000000000000000",
+  "is_verified": true,
+  "is_proxy": false,
+  "liquidity_locked": true,
+  "lock_platform": "PancakeSwap",
+  "price_usd": 2.45,
+  "volume_24h": 52000000,
+  "market_cap": 720000000,
+  "holders": 1250000,
+  "data_sources": ["GoPlus", "DexScreener"],
+  "warnings": [],
+  "positives": [
+    "Contract source code is verified",
+    "Ownership is renounced",
+    "Liquidity is locked",
+    "No honeypot patterns detected"
+  ]
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/health -->
+            <section id="health">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/health</code>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Check API status and version. No authentication required.
+                </p>
+
+                <div class="endpoint-card">
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Response</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "status": "ok",
+  "service": "chain-sentinel",
+  "version": "0.3.0"
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- POST /api/keys/generate -->
+            <section id="generate-key">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/keys/generate</code>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Generate a new API key. In production, this requires authentication and a paid plan.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Request Body</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">user_id</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">User identifier. Default: <code>demo_user</code></td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">plan</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Plan type: <code>free</code>, <code>pro</code>, <code>enterprise</code>. Default: <code>pro</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response <span class="response-status status-200">200</span></h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Example</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "api_key": "cs_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456",
+  "plan": "pro",
+  "limits": {
+    "scans_per_minute": -1,
+    "api_calls_per_day": 1000,
+    "wallet_monitoring": 5
+  },
+  "message": "Keep this key safe. It won't be shown again."
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/keys/validate -->
+            <section id="validate-key">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/keys/validate</code>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Validate an API key and check its usage. Pass the key in the <code>X-API-Key</code> header.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response <span class="response-status status-200">200</span></h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Example</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "valid": true,
+  "plan": "pro",
+  "usage_count": 42,
+  "limits": {
+    "scans_per_minute": -1,
+    "api_calls_per_day": 1000,
+    "wallet_monitoring": 5
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/plans -->
+            <section id="plans">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/plans</code>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get all available plans, features, and limits. No authentication required.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response <span class="response-status status-200">200</span></h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Example</span>
+                    </div>
+                    <pre><code class="language-json">{
+  "plans": [
+    {
+      "name": "Free",
+      "price": 0,
+      "currency": "USD",
+      "interval": "forever",
+      "features": [
+        "20 scans per minute",
+        "Basic safety report",
+        "9 blockchain networks",
+        "Honeypot detection"
+      ]
+    },
+    {
+      "name": "Pro",
+      "price": 5,
+      "currency": "USD",
+      "interval": "month",
+      "features": [
+        "Unlimited scans",
+        "Advanced safety report",
+        "API access (1000 calls/day)",
+        "Wallet monitoring (5 wallets)",
+        "Email alerts",
+        "Priority support"
+      ]
+    },
+    {
+      "name": "Enterprise",
+      "price": 25,
+      "currency": "USD",
+      "interval": "month",
+      "features": [
+        "Everything in Pro",
+        "Unlimited API calls",
+        "Wallet monitoring (50 wallets)",
+        "Custom integrations",
+        "White-label option",
+        "Dedicated support"
+      ]
+    }
+  ]
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Supported Chains -->
+            <section id="supported-chains">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Supported Chains</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Use these chain identifiers in the <code>chain</code> parameter.
+                </p>
+
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Chain ID</th><th>Network</th><th>Native Token</th><th>Explorer</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>bsc</code></td><td>🟡 BNB Smart Chain</td><td>BNB</td><td style="color:#a1a1aa;font-size:0.82rem;">bscscan.com</td></tr>
+                        <tr><td><code>eth</code></td><td>🔷 Ethereum</td><td>ETH</td><td style="color:#a1a1aa;font-size:0.82rem;">etherscan.io</td></tr>
+                        <tr><td><code>base</code></td><td>🔵 Base</td><td>ETH</td><td style="color:#a1a1aa;font-size:0.82rem;">basescan.org</td></tr>
+                        <tr><td><code>arbitrum</code></td><td>🌀 Arbitrum One</td><td>ETH</td><td style="color:#a1a1aa;font-size:0.82rem;">arbiscan.io</td></tr>
+                        <tr><td><code>polygon</code></td><td>🟣 Polygon</td><td>MATIC</td><td style="color:#a1a1aa;font-size:0.82rem;">polygonscan.com</td></tr>
+                        <tr><td><code>avalanche</code></td><td>🔴 Avalanche</td><td>AVAX</td><td style="color:#a1a1aa;font-size:0.82rem;">snowtrace.io</td></tr>
+                        <tr><td><code>fantom</code></td><td>👻 Fantom</td><td>FTM</td><td style="color:#a1a1aa;font-size:0.82rem;">ftmscan.com</td></tr>
+                        <tr><td><code>optimism</code></td><td>🔴 Optimism</td><td>ETH</td><td style="color:#a1a1aa;font-size:0.82rem;">optimistic.etherscan.io</td></tr>
+                        <tr><td><code>solana</code></td><td>🟣 Solana</td><td>SOL</td><td style="color:#a1a1aa;font-size:0.82rem;">solscan.io</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Response Fields Deep Dive -->
+            <section id="response-fields">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Understanding the Safety Score</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    The safety score (0-100) is calculated from multiple on-chain and off-chain signals.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px;">
+                    <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:16px;">
+                        <div style="font-size:1.5rem;font-weight:800;color:#4ade80;">80-100</div>
+                        <div style="font-size:0.82rem;color:#a1a1aa;margin-top:4px;">Safe — Low risk indicators</div>
+                    </div>
+                    <div style="background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.15);border-radius:8px;padding:16px;">
+                        <div style="font-size:1.5rem;font-weight:800;color:#fbbf24;">60-79</div>
+                        <div style="font-size:0.82rem;color:#a1a1aa;margin-top:4px;">Caution — Some concerns</div>
+                    </div>
+                    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:16px;">
+                        <div style="font-size:1.5rem;font-weight:800;color:#f87171;">30-59</div>
+                        <div style="font-size:0.82rem;color:#a1a1aa;margin-top:4px;">Danger — High risk signals</div>
+                    </div>
+                    <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:16px;">
+                        <div style="font-size:1.5rem;font-weight:800;color:#ef4444;">0-29</div>
+                        <div style="font-size:0.82rem;color:#a1a1aa;margin-top:4px;">Critical — Likely scam</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Scoring Factors</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Factor</th><th>Weight</th><th>What It Checks</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="font-weight:500;">Honeypot Detection</td><td style="font-family:'JetBrains Mono',monospace;color:#f87171;">High</td><td style="color:#a1a1aa;font-size:0.85rem;">Can holders actually sell the token?</td></tr>
+                        <tr><td style="font-weight:500;">Contract Verification</td><td style="font-family:'JetBrains Mono',monospace;color:#fbbf24;">Medium</td><td style="color:#a1a1aa;font-size:0.85rem;">Is source code verified on block explorer?</td></tr>
+                        <tr><td style="font-weight:500;">Ownership Status</td><td style="font-family:'JetBrains Mono',monospace;color:#fbbf24;">Medium</td><td style="color:#a1a1aa;font-size:0.85rem;">Has the owner renounced control?</td></tr>
+                        <tr><td style="font-weight:500;">Liquidity Lock</td><td style="font-family:'JetBrains Mono',monospace;color:#fbbf24;">Medium</td><td style="color:#a1a1aa;font-size:0.85rem;">Is LP locked on a recognized platform?</td></tr>
+                        <tr><td style="font-weight:500;">Buy/Sell Tax</td><td style="font-family:'JetBrains Mono',monospace;color:#4ade80;">Low</td><td style="color:#a1a1aa;font-size:0.85rem;">Are transaction taxes reasonable (&lt;10%)?</td></tr>
+                        <tr><td style="font-weight:500;">Proxy Contract</td><td style="font-family:'JetBrains Mono',monospace;color:#4ade80;">Low</td><td style="color:#a1a1aa;font-size:0.85rem;">Does the contract use an upgradeable proxy?</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Code Examples -->
+            <section id="sdks">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Code Examples</h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Copy-paste ready examples for popular languages.
+                </p>
+
+                <!-- Python -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">🐍 Python</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Python (requests)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-python">import requests
+
+API_URL = "https://chainshieldsentinel.tech/api/scan"
+API_KEY = "cs_your_api_key_here"  # Optional for free tier
+
+def scan_token(address: str, chain: str = "bsc") -> dict:
+    """Scan a token for safety indicators."""
+    headers = {"Content-Type": "application/json"}
+    if API_KEY:
+        headers["X-API-Key"] = API_KEY
+    
+    response = requests.post(API_URL, json={
+        "address": address,
+        "chain": chain
+    }, headers=headers)
+    
+    response.raise_for_status()
+    return response.json()
+
+
+# Example: Scan CAKE on BSC
+result = scan_token("0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82")
+
+print(f"Token: {result['name']} ({result['symbol']})")
+print(f"Safety Score: {result['safety_score']}/100")
+print(f"Risk Level: {result['risk_level']}")
+print(f"Honeypot: {result['is_honeypot']}")
+print(f"Buy Tax: {result['buy_tax']}%")
+print(f"Sell Tax: {result['sell_tax']}%")</code></pre>
+                </div>
+
+                <!-- JavaScript -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">⚡ JavaScript / Node.js</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">JavaScript (fetch)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-javascript">const API_URL = "https://chainshieldsentinel.tech/api/scan";
+const API_KEY = "cs_your_api_key_here"; // Optional for free tier
+
+async function scanToken(address, chain = "bsc") {
+  const headers = { "Content-Type": "application/json" };
+  if (API_KEY) headers["X-API-Key"] = API_KEY;
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ address, chain })
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+  }
+
+  return response.json();
+}
+
+// Example: Scan CAKE on BSC
+scanToken("0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82")
+  .then(result => {
+    console.log(`Token: ${result.name} (${result.symbol})`);
+    console.log(`Safety Score: ${result.safety_score}/100`);
+    console.log(`Risk Level: ${result.risk_level}`);
+  })
+  .catch(console.error);</code></pre>
+                </div>
+
+                <!-- cURL -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">🔧 cURL</h3>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">bash</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-bash"># Free tier (no API key)
+curl -s -X POST https://chainshieldsentinel.tech/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", "chain": "bsc"}' \
+  | jq '.'
+
+# With API key
+curl -s -X POST https://chainshieldsentinel.tech/api/scan \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: cs_your_api_key_here" \
+  -d '{"address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", "chain": "bsc"}' \
+  | jq '.safety_score, .risk_level, .is_honeypot'</code></pre>
+                </div>
+
+                <!-- Trading Bot Integration -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;">🤖 Trading Bot Integration</h3>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">
+                        Example: Auto-check tokens before buying in a trading bot.
+                    </p>
+                    <div class="code-header">
+                        <span style="font-size:0.72rem;color:#71717a;">Python — Pre-trade Safety Check</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-python">import requests
+
+def is_safe_to_buy(token_address: str, chain: str = "bsc",
+                   min_score: int = 60, max_tax: float = 10.0) -> dict:
+    """
+    Check if a token is safe to buy.
+    Returns dict with 'safe' (bool) and 'reason' (str).
+    """
+    try:
+        result = requests.post(
+            "https://chainshieldsentinel.tech/api/scan",
+            json={"address": token_address, "chain": chain},
+            headers={"X-API-Key": "cs_your_key"},
+            timeout=10
+        ).json()
+        
+        # Check honeypot
+        if result.get("is_honeypot"):
+            return {"safe": False, "reason": "Honeypot detected — cannot sell"}
+        
+        # Check safety score
+        if result["safety_score"] < min_score:
+            return {"safe": False, "reason": f"Score {result['safety_score']} < {min_score}"}
+        
+        # Check tax
+        if result["buy_tax"] > max_tax:
+            return {"safe": False, "reason": f"Buy tax {result['buy_tax']}% > {max_tax}%"}
+        
+        if result["sell_tax"] > max_tax:
+            return {"safe": False, "reason": f"Sell tax {result['sell_tax']}% > {max_tax}%"}
+        
+        return {"safe": True, "reason": f"Score {result['safety_score']} — {result['risk_level']}"}
+    
+    except Exception as e:
+        return {"safe": False, "reason": f"Scan failed: {e}"}
+
+
+# Usage in your trading bot
+check = is_safe_to_buy("0xNewTokenAddress...")
+if check["safe"]:
+    print(f"✅ Safe to buy: {check['reason']}")
+    # execute_buy(token_address)
+else:
+    print(f"❌ Skipping: {check['reason']}")</code></pre>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <div class="section-divider"></div>
+            <div style="text-align: center; padding: 32px 0;">
+                <p style="color: #71717a; font-size: 0.85rem;">
+                    Built by <a href="https://x.com/ChainShieldSn" style="color: #818cf8; text-decoration: none;">@ChainShieldSn</a>
+                </p>
+                <p style="color: #52525b; font-size: 0.78rem; margin-top: 8px;">
+                    <a href="/" style="color: #71717a; text-decoration: none;">← Back to Scanner</a>
+                    &nbsp;&nbsp;·&nbsp;&nbsp;
+                    <a href="https://github.com/0xairdropnoob/chain-shield" style="color: #71717a; text-decoration: none;">GitHub</a>
+                    &nbsp;&nbsp;·&nbsp;&nbsp;
+                    <a href="mailto:info@chainshieldsentinel.tech" style="color: #71717a; text-decoration: none;">Contact</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<script>
+    // Initialize highlight.js
+    hljs.highlightAll();
+    
+    // Copy code function
+    function copyCode(btn) {
+        const pre = btn.closest('.code-header').nextElementSibling;
+        const code = pre.querySelector('code').textContent;
+        navigator.clipboard.writeText(code).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        });
+    }
+    
+    // Sidebar active state
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 100;
+            if (scrollY >= sectionTop) current = section.id;
+        });
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+        });
+    });
+    
+    // Try It Live — Scan
+    async function tryScan() {
+        const address = document.getElementById('scan-address').value.trim();
+        const chain = document.getElementById('scan-chain').value;
+        const resultEl = document.getElementById('scan-result');
+        const statusEl = document.getElementById('scan-status');
+        
+        if (!address) {
+            statusEl.textContent = 'Please enter a contract address';
+            statusEl.style.color = '#f87171';
+            return;
+        }
+        
+        statusEl.textContent = 'Scanning...';
+        statusEl.style.color = '#818cf8';
+        resultEl.classList.remove('visible');
+        
+        try {
+            const start = Date.now();
+            const response = await fetch('/api/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, chain })
+            });
+            const data = await response.json();
+            const elapsed = Date.now() - start;
+            
+            if (!response.ok) {
+                statusEl.textContent = `Error ${response.status}`;
+                statusEl.style.color = '#f87171';
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                resultEl.classList.add('visible');
+                return;
+            }
+            
+            statusEl.textContent = `${response.status} OK · ${elapsed}ms`;
+            statusEl.style.color = '#4ade80';
+            resultEl.textContent = JSON.stringify(data, null, 2);
+            resultEl.classList.add('visible');
+            resultEl.style.borderColor = 'rgba(34,197,94,0.2)';
+        } catch (err) {
+            statusEl.textContent = err.message;
+            statusEl.style.color = '#f87171';
+        }
+    }
+</script>
+
+</body>
+</html>

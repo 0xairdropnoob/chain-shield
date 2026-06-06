@@ -114,6 +114,13 @@ async def root():
         return HTMLResponse(content=f.read())
 
 
+@app.get("/docs", response_class=HTMLResponse)
+@app.get("/api-docs", response_class=HTMLResponse)
+async def api_docs():
+    with open("static/docs.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+
 @app.post("/api/scan", response_model=ScanResponse)
 async def scan_token(req: ScanRequest, request: Request):
     # Check for API key in headers
