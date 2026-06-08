@@ -1067,10 +1067,30 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="text-sm text-zinc-400 block mb-1">Send to this address (BSC/ETH — USDT)</label>
-                            <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                                <code class="text-sm text-green-400 flex-1 break-all">0x4809618558bf56f9b348fcf1bcd83dbb949746eb</code>
-                                <button onclick="copyToClipboard('0x4809618558bf56f9b348fcf1bcd83dbb949746eb')" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
+                            <label class="text-sm text-zinc-400 block mb-1">Send payment to one of these addresses:</label>
+                            
+                            <!-- EVM Wallet (BSC/ETH) -->
+                            <div class="mb-2">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 font-semibold">BSC / ETH</span>
+                                    <span class="text-xs text-zinc-500">USDT, USDC, BNB, ETH</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                    <code class="text-sm text-green-400 flex-1 break-all">0x4809618558bf56f9b348fcf1bcd83dbb949746eb</code>
+                                    <button onclick="copyToClipboard('0x4809618558bf56f9b348fcf1bcd83dbb949746eb')" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
+                                </div>
+                            </div>
+
+                            <!-- Solana Wallet -->
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-semibold">SOLANA</span>
+                                    <span class="text-xs text-zinc-500">USDC, SOL, SPL tokens</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                    <code class="text-sm text-purple-400 flex-1 break-all">7FUVmXcV8rTeyq3RmkpNzwRfyiLn22ggQhpzByrdzB5q</code>
+                                    <button onclick="copyToClipboard('7FUVmXcV8rTeyq3RmkpNzwRfyiLn22ggQhpzByrdzB5q')" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
+                                </div>
                             </div>
                         </div>
 
@@ -1078,7 +1098,7 @@
                             <label class="text-sm text-zinc-400 block mb-1">Amount</label>
                             <div class="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                                 <span class="text-lg font-bold text-yellow-400" id="cryptoAmount">$9 USDT</span>
-                                <span class="text-zinc-500 text-xs ml-2">(BSC or ETH network)</span>
+                                <span class="text-zinc-500 text-xs ml-2">(BSC, ETH, or Solana network)</span>
                             </div>
                         </div>
 
