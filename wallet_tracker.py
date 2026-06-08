@@ -72,7 +72,10 @@ DEXSCREENER_API = "https://api.dexscreener.com/latest/dex"
 # Etherscan V2 API (unified endpoint, supports multiple chains)
 ETHERSCAN_V2_API = "https://api.etherscan.io/v2/api"
 
-# Chain IDs for Etherscan V2
+# Moralis API (free tier: 100k CU/day)
+MORALIS_API = "https://deep-index.moralis.io/api/v2.2"
+
+# Chain IDs for Etherscan V2 and Moralis
 CHAIN_IDS = {
     "eth": 1,
     "bsc": 56,
@@ -81,6 +84,17 @@ CHAIN_IDS = {
     "base": 8453,
     "optimism": 10,
     "avalanche": 43114,
+}
+
+# Moralis chain identifiers
+MORALIS_CHAINS = {
+    "eth": "eth",
+    "bsc": "bsc",
+    "polygon": "polygon",
+    "arbitrum": "arbitrum",
+    "base": "base",
+    "optimism": "optimism",
+    "avalanche": "avalanche",
 }
 
 
@@ -260,7 +274,13 @@ class WalletTracker:
                 continue
 
             try:
-                # Primary: Use Etherscan-compatible API (needs API key for V2)
+                # Primary: Moralis API (best for wallet history)
+                trades = await self._get_moralis_trades(chain, address, limit)
+                if trades:
+                    all_trades.extend(trades)
+                    continue
+
+                # Secondary: Etherscan V2 API (needs API key)
                 trades = await self._get_explorer_trades(chain, address, limit)
                 if trades:
                     all_trades.extend(trades)
@@ -275,6 +295,104 @@ class WalletTracker:
 
         all_trades.sort(key=lambda t: t.timestamp, reverse=True)
         return all_trades[:limit]
+
+    async def _get_moralis_trades(self, chain: str, address: str, limit: int = 20) -> list:
+        """Get trades using Moralis API (free tier: 100k CU/day)."""
+        import os
+        moralis_key = os.getenv("MORALIS_API_KEY", "")
+        if not moralis_key:
+            return []
+
+        moralis_chain = MORALIS_CHAINS.get(chain)
+        if not moralis_chain:
+            return []
+
+        session = await self._get_session()
+        trades = []
+        headers = {"X-API-Key": moralis_key, "Accept": "application/json"}
+
+        try:
+            # Get ERC-20 token transfers
+            url = f"{MORALIS_API}/{address}/erc20/transfers"
+            params = {
+                "chain": moralis_chain,
+                "limit": min(limit * 2, 50),
+                "order": "DESC",
+            }
+            async with session.get(url, params=params, headers=headers,
+                                   timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status != 200:
+                    return []
+                data = await resp.json()
+
+            results = data.get("result", [])
+            if not results:
+                return []
+
+            seen_txs = set()
+            for tx in results[:limit * 2]:
+                tx_hash = tx.get("transaction_hash", "")
+                if tx_hash in seen_txs:
+                    continue
+                seen_txs.add(tx_hash)
+
+                token_addr = tx.get("address", "")
+                token_symbol = tx.get("token_symbol", "???")
+                token_name = tx.get("token_name", "Unknown")
+                decimals = int(tx.get("token_decimals", 18))
+                value_raw = int(tx.get("value", 0))
+                value = value_raw / (10 ** decimals) if decimals > 0 else value_raw
+
+                # Determine buy/sell
+                is_buy = tx.get("to_address", "").lower() == address.lower()
+                action = "buy" if is_buy else "sell"
+
+                # Skip native token wraps
+                if token_addr.lower() == WRAPPED_NATIVE.get(chain, "").lower():
+                    continue
+
+                # Skip spam
+                if tx.get("possible_spam", False):
+                    continue
+
+                # Get price from DexScreener
+                token_info = await self._dexscreener_token(token_addr)
+                price_usd = float(token_info.get("priceUsd", 0) or 0)
+                amount_usd = value * price_usd
+
+                timestamp = tx.get("block_timestamp", "")
+                if timestamp:
+                    from datetime import datetime
+                    try:
+                        ts = int(datetime.fromisoformat(timestamp.replace("Z", "+00:00")).timestamp())
+                    except:
+                        ts = int(time.time())
+                else:
+                    ts = int(time.time())
+
+                trades.append(Trade(
+                    tx_hash=tx_hash,
+                    chain=chain,
+                    timestamp=ts,
+                    action=action,
+                    token_address=token_addr,
+                    token_symbol=token_symbol,
+                    token_name=token_name,
+                    amount=value,
+                    amount_usd=amount_usd,
+                    price_usd=price_usd,
+                    dex=token_info.get("dexId", "unknown"),
+                    pair_address=token_info.get("pairAddress", ""),
+                ))
+
+                if len(trades) >= limit:
+                    break
+
+            return trades
+
+        except Exception as e:
+            print(f"Moralis error ({chain}): {e}")
+            return []
 
     async def _get_explorer_trades(self, chain: str, address: str, limit: int = 20) -> list:
         """Get trades using Etherscan V2 API (needs API key)."""
