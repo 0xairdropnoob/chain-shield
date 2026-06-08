@@ -469,7 +469,9 @@ class WalletTracker:
     # === SOLANA ===
 
     async def _get_solana_trades(self, address: str, limit: int = 20) -> list:
-        """Get recent Solana trades for a wallet."""
+        """Get recent Solana trades for a wallet.
+        Checks both token balance changes and SOL balance changes.
+        """
         session = await self._get_session()
         url = RPC_ENDPOINTS["solana"]
         trades = []
@@ -482,13 +484,17 @@ class WalletTracker:
                 "method": "getSignaturesForAddress",
                 "params": [address, {"limit": limit}]
             }
-            async with session.post(url, json=payload) as resp:
+            async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
                 data = await resp.json()
                 signatures = data.get("result", [])
+                if data.get("error"):
+                    print(f"Solana RPC error: {data['error']}")
+                    return []
 
             for sig_info in signatures[:limit]:
                 sig = sig_info.get("signature", "")
-                slot = sig_info.get("slot", 0)
+                if sig_info.get("err"):
+                    continue  # Skip failed transactions
 
                 # Get transaction details
                 tx_payload = {
@@ -497,26 +503,36 @@ class WalletTracker:
                     "method": "getTransaction",
                     "params": [sig, {"encoding": "json", "maxSupportedTransactionVersion": 0}]
                 }
-                async with session.post(url, json=tx_payload) as tx_resp:
+                async with session.post(url, json=tx_payload, timeout=aiohttp.ClientTimeout(total=10)) as tx_resp:
                     tx_data = await tx_resp.json()
                     tx = tx_data.get("result")
 
                 if not tx or not tx.get("meta"):
                     continue
 
-                # Parse token transfers from transaction
                 meta = tx.get("meta", {})
+                account_keys = tx.get("transaction", {}).get("message", {}).get("accountKeys", [])
+                
+                # Find our wallet's index in account keys
+                wallet_idx = None
+                for i, key in enumerate(account_keys):
+                    key_str = key if isinstance(key, str) else key.get("pubkey", "")
+                    if key_str == address:
+                        wallet_idx = i
+                        break
+
+                # === Method 1: Check token balance changes where wallet is owner ===
                 pre_balances = meta.get("preTokenBalances", [])
                 post_balances = meta.get("postTokenBalances", [])
 
-                # Find token changes for our wallet
                 for post in post_balances:
                     if post.get("owner") != address:
                         continue
                     mint = post.get("mint", "")
+                    if mint == "So11111111111111111111111111111111111111112":
+                        continue  # Skip wrapped SOL
                     post_amount = float(post.get("uiTokenAmount", {}).get("uiAmount", 0) or 0)
 
-                    # Find matching pre balance
                     pre_amount = 0
                     for pre in pre_balances:
                         if pre.get("mint") == mint and pre.get("owner") == address:
@@ -530,7 +546,6 @@ class WalletTracker:
                     action = "buy" if diff > 0 else "sell"
                     amount = abs(diff)
 
-                    # Get token info from DexScreener
                     token_info = await self._dexscreener_token(mint)
                     symbol = token_info.get("baseToken", {}).get("symbol", "???")
                     name = token_info.get("baseToken", {}).get("name", "Unknown")
@@ -550,6 +565,31 @@ class WalletTracker:
                         dex=token_info.get("dexId", "unknown"),
                         pair_address=token_info.get("pairAddress", ""),
                     ))
+
+                # === Method 2: Check SOL balance change (fee + SOL transfers) ===
+                if wallet_idx is not None:
+                    pre_sol = meta.get("preBalances", [])
+                    post_sol = meta.get("postBalances", [])
+                    if wallet_idx < len(pre_sol) and wallet_idx < len(post_sol):
+                        sol_diff = (post_sol[wallet_idx] - pre_sol[wallet_idx]) / 1e9
+                        # Only flag significant SOL changes (not just fees)
+                        fee = meta.get("fee", 0) / 1e9
+                        if abs(sol_diff) > fee * 2 and abs(sol_diff) > 0.001:
+                            # SOL transfer (not just fee)
+                            action = "buy" if sol_diff > 0 else "sell"
+                            trades.append(Trade(
+                                tx_hash=sig,
+                                chain="solana",
+                                timestamp=tx.get("blockTime", int(time.time())),
+                                action=action,
+                                token_address="So11111111111111111111111111111111111111112",
+                                token_symbol="SOL",
+                                token_name="Solana",
+                                amount=abs(sol_diff),
+                                amount_usd=abs(sol_diff) * 0,  # Price fetched separately
+                                price_usd=0,
+                                dex="native",
+                            ))
 
         except Exception as e:
             print(f"Solana error: {e}")
