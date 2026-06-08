@@ -23,7 +23,7 @@ from api_keys import api_key_manager
 app = FastAPI(
     title="Chain Sentinel",
     description="Token Safety Scanner — Multi-chain",
-    version="0.5.0",
+    version="0.6.0",
     docs_url=None,
     redoc_url=None
 )
@@ -278,7 +278,7 @@ async def scan_token(req: ScanRequest, request: Request):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "chain-sentinel", "version": "0.5.0"}
+    return {"status": "ok", "service": "chain-sentinel", "version": "0.6.0"}
 
 
 
@@ -1022,6 +1022,266 @@ async def contact(req: ContactRequest):
     except Exception as e:
         print(f"[CONTACT ERROR] {e}")
         return {"status": "ok", "message": "Message received"}
+
+
+# === v0.6.0 — PAYMENT INFRASTRUCTURE ===
+
+# Env vars for payment configuration
+LEMONSQUEEZY_WEBHOOK_SECRET = os.getenv("LEMONSQUEEZY_WEBHOOK_SECRET", "")
+LEMONSQUEEZY_STORE_ID = os.getenv("LEMONSQUEEZY_STORE_ID", "")
+LEMONSQUEEZY_PRO_VARIANT_ID = os.getenv("LEMONSQUEEZY_PRO_VARIANT_ID", "")
+LEMONSQUEEZY_ENTERPRISE_VARIANT_ID = os.getenv("LEMONSQUEEZY_ENTERPRISE_VARIANT_ID", "")
+ADMIN_KEY = os.getenv("ADMIN_KEY", "")
+CRYPTO_WALLET_BSC = os.getenv("CRYPTO_WALLET_BSC", "0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643")
+CRYPTO_WALLET_ETH = os.getenv("CRYPTO_WALLET_ETH", "0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643")
+CRYPTO_WALLET_SOL = os.getenv("CRYPTO_WALLET_SOL", "PLACEHOLDER_SOLANA_ADDRESS")
+
+# Ensure data directory exists
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+
+SUBSCRIPTIONS_FILE = os.path.join(DATA_DIR, "subscriptions.json")
+CRYPTO_PAYMENTS_FILE = os.path.join(DATA_DIR, "crypto_payments.json")
+
+
+class SubscriptionManager:
+    """Manage LemonSqueezy subscriptions + crypto payment subscriptions."""
+
+    def __init__(self):
+        self.subscriptions = self._load(SUBSCRIPTIONS_FILE)
+        self.crypto_payments = self._load(CRYPTO_PAYMENTS_FILE)
+
+    @staticmethod
+    def _load(path: str) -> list:
+        if os.path.exists(path):
+            try:
+                with open(path) as f:
+                    return json_module.load(f)
+            except Exception:
+                return []
+        return []
+
+    @staticmethod
+    def _save(path: str, data: list):
+        with open(path, "w") as f:
+            json_module.dump(data, f, indent=2)
+
+    def _persist(self):
+        self._save(SUBSCRIPTIONS_FILE, self.subscriptions)
+        self._save(CRYPTO_PAYMENTS_FILE, self.crypto_payments)
+
+    # ---- subscription helpers ----
+    def create_subscription(self, email: str, plan: str, subscription_id: str,
+                            status: str = "active") -> dict:
+        """Create or update a subscription record and generate an API key."""
+        api_key = api_key_manager.generate_key(email, plan)
+        entry = {
+            "subscription_id": subscription_id,
+            "email": email,
+            "plan": plan,
+            "api_key": api_key,
+            "status": status,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "expires_at": None,
+        }
+        self.subscriptions.append(entry)
+        self._persist()
+        return entry
+
+    def get_subscription(self, *, subscription_id: str = None,
+                         email: str = None, api_key: str = None) -> Optional[dict]:
+        for s in self.subscriptions:
+            if subscription_id and s.get("subscription_id") == subscription_id:
+                return s
+            if email and s.get("email") == email:
+                return s
+            if api_key and s.get("api_key") == api_key:
+                return s
+        return None
+
+    def cancel_subscription(self, subscription_id: str) -> bool:
+        for s in self.subscriptions:
+            if s.get("subscription_id") == subscription_id:
+                s["status"] = "cancelled"
+                api_key_manager.deactivate_key(s["api_key"])
+                self._persist()
+                return True
+        return False
+
+    def is_active(self, subscription_id: str) -> bool:
+        sub = self.get_subscription(subscription_id=subscription_id)
+        return sub is not None and sub.get("status") == "active"
+
+    # ---- crypto payment helpers ----
+    def add_crypto_payment(self, email: str, plan: str, tx_hash: str,
+                           chain: str, wallet_address: str) -> dict:
+        import uuid
+        payment = {
+            "payment_id": f"cp_{uuid.uuid4().hex[:16]}",
+            "email": email,
+            "plan": plan,
+            "tx_hash": tx_hash,
+            "chain": chain,
+            "wallet_address": wallet_address,
+            "status": "pending",
+            "submitted_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+        self.crypto_payments.append(payment)
+        self._persist()
+        return payment
+
+    def list_pending_crypto_payments(self) -> list:
+        return [p for p in self.crypto_payments if p.get("status") == "pending"]
+
+    def approve_crypto_payment(self, payment_id: str) -> Optional[dict]:
+        for p in self.crypto_payments:
+            if p.get("payment_id") == payment_id and p.get("status") == "pending":
+                p["status"] = "approved"
+                api_key = api_key_manager.generate_key(p["email"], p["plan"])
+                p["api_key"] = api_key
+                p["approved_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                # Also create a subscription record
+                self.create_subscription(
+                    email=p["email"], plan=p["plan"],
+                    subscription_id=f"crypto_{payment_id}",
+                )
+                self._persist()
+                return p
+        return None
+
+
+subscription_manager = SubscriptionManager()
+
+
+# === Pydantic models for payment endpoints ===
+
+class CryptoPaymentRequest(BaseModel):
+    email: str
+    plan: str
+    tx_hash: str
+    chain: str = "bsc"
+    wallet_address: str = ""
+
+class CryptoApproveRequest(BaseModel):
+    payment_id: str
+
+
+# === LemonSqueezy Webhook Endpoint ===
+@app.post("/api/lemonsqueezy/webhook")
+async def lemonsqueezy_webhook(request: Request):
+    """Receive and process LemonSqueezy webhook events."""
+    body = await request.body()
+    payload_str = body.decode("utf-8")
+
+    # Verify signature
+    signature = request.headers.get("X-Signature", "")
+    if LEMONSQUEEZY_WEBHOOK_SECRET:
+        expected = hmac.new(
+            LEMONSQUEEZY_WEBHOOK_SECRET.encode("utf-8"),
+            payload_str.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            raise HTTPException(status_code=401, detail="Invalid signature")
+
+    try:
+        payload = json_module.loads(payload_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    event_name = payload.get("meta", {}).get("event_name", "")
+    data = payload.get("data", {})
+    attributes = data.get("attributes", {})
+    subscription_id = str(data.get("id", ""))
+    customer_email = attributes.get("user_email", "") or attributes.get("customer_email", "")
+    variant_id = str(attributes.get("variant_id", ""))
+
+    # Determine plan from variant
+    plan = "pro"
+    if variant_id == LEMONSQUEEZY_ENTERPRISE_VARIANT_ID:
+        plan = "enterprise"
+
+    if event_name == "subscription_created":
+        subscription_manager.create_subscription(
+            email=customer_email, plan=plan,
+            subscription_id=subscription_id, status="active",
+        )
+    elif event_name == "subscription_updated":
+        sub = subscription_manager.get_subscription(subscription_id=subscription_id)
+        if sub:
+            sub["plan"] = plan
+            sub["status"] = "active"
+            subscription_manager._persist()
+    elif event_name in ("subscription_cancelled", "subscription_expired"):
+        subscription_manager.cancel_subscription(subscription_id)
+
+    return {"status": "ok", "event": event_name}
+
+
+# === Subscription Status Endpoint ===
+@app.get("/api/subscription/status")
+async def subscription_status(request: Request, email: str = None):
+    """Return subscription status by email or API key header."""
+    api_key = request.headers.get("X-API-Key")
+    sub = subscription_manager.get_subscription(email=email, api_key=api_key)
+    if not sub:
+        return {"active": False, "plan": "free", "expires_at": None, "api_key": None}
+    return {
+        "active": sub.get("status") == "active",
+        "plan": sub.get("plan", "free"),
+        "expires_at": sub.get("expires_at"),
+        "api_key": sub.get("api_key"),
+    }
+
+
+# === Crypto Payment Endpoints ===
+@app.post("/api/crypto/payment")
+async def create_crypto_payment(req: CryptoPaymentRequest):
+    """Submit a crypto payment for verification."""
+    if req.plan not in ("pro", "enterprise"):
+        raise HTTPException(status_code=400, detail="Invalid plan. Must be 'pro' or 'enterprise'.")
+    if not req.tx_hash:
+        raise HTTPException(status_code=400, detail="Transaction hash required.")
+    if not req.email:
+        raise HTTPException(status_code=400, detail="Email required.")
+
+    payment = subscription_manager.add_crypto_payment(
+        email=req.email, plan=req.plan, tx_hash=req.tx_hash,
+        chain=req.chain, wallet_address=req.wallet_address,
+    )
+    return {
+        "status": "pending",
+        "message": "Payment submitted. We'll verify within 24h.",
+        "payment_id": payment["payment_id"],
+    }
+
+
+@app.get("/api/crypto/payments")
+async def list_crypto_payments(admin_key: str = None, request: Request = None):
+    """List pending crypto payments (admin only)."""
+    key = admin_key or (request.headers.get("X-Admin-Key") if request else None)
+    if not ADMIN_KEY or key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Admin key required.")
+    return {"payments": subscription_manager.list_pending_crypto_payments()}
+
+
+@app.post("/api/crypto/approve")
+async def approve_crypto_payment(req: CryptoApproveRequest, request: Request):
+    """Admin approves a crypto payment and generates an API key."""
+    key = request.headers.get("X-Admin-Key")
+    if not ADMIN_KEY or key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Admin key required.")
+
+    result = subscription_manager.approve_crypto_payment(req.payment_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Payment not found or already processed.")
+    return {
+        "status": "approved",
+        "payment_id": result["payment_id"],
+        "api_key": result.get("api_key"),
+        "email": result["email"],
+        "plan": result["plan"],
+    }
 
 
 # For local development

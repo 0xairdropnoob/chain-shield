@@ -1,0 +1,12 @@
+[
+  {
+    "payment_id": "cp_5173255b07fb4b9d",
+    "email": "test@example.com",
+    "plan": "pro",
+    "tx_hash": "0xabc123",
+    "chain": "bsc",
+    "wallet_address": "0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643",
+    "status": "pending",
+    "submitted_at": "2026-06-08T08:37:35Z"
+  }
+]

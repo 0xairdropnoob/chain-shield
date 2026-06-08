@@ -972,7 +972,7 @@
                             <span>API access — 100 req/min</span>
                         </li>
                     </ul>
-                    <button onclick="window.open('mailto:info@chainshieldsentinel.tech?subject=Pro%20Plan%20Inquiry&body=Hi%2C%0A%0AI%27m%20interested%20in%20the%20Pro%20plan%20%28%2419%2Fmo%29.%0A%0AThanks!')" class="block w-full text-center py-3 px-6 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold text-sm cursor-pointer">
+                    <button onclick="openCheckout('pro')" class="block w-full text-center py-3 px-6 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold text-sm cursor-pointer">
                         Get Pro — $9/mo
                     </button>
                 </div>
@@ -1019,8 +1019,8 @@
                             <span>White-label option (+$200/mo)</span>
                         </li>
                     </ul>
-                    <button onclick="window.open('mailto:info@chainshieldsentinel.tech?subject=Enterprise%20Plan&body=Hi%2C%0A%0AI%27m%20interested%20in%20the%20Enterprise%20plan%20%28%2429%2Fmo%29.%0A%0AThanks!')" class="block w-full text-center py-3 px-6 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all font-semibold text-sm cursor-pointer">
-                        Contact Sales
+                    <button onclick="openCheckout('enterprise')" class="block w-full text-center py-3 px-6 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all font-semibold text-sm cursor-pointer">
+                        Get Enterprise — $29/mo
                     </button>
                 </div>
             </div>
@@ -1030,6 +1030,102 @@
                 <p class="text-zinc-600 text-xs">
                     Free users see the tip of the iceberg. <span class="text-indigo-400">Pro users see everything underneath.</span>
                 </p>
+            </div>
+
+            <!-- Crypto Payment Option -->
+            <div class="mt-8 text-center">
+                <p class="text-zinc-500 text-sm mb-3">Prefer crypto? Pay with USDT/BNB/ETH directly.</p>
+                <button onclick="openCryptoModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-green-500/30 hover:text-green-400 transition-all font-semibold text-sm">
+                    ₿ Pay with Crypto
+                </button>
+            </div>
+
+            <!-- Crypto Payment Modal -->
+            <div id="cryptoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8);">
+                <div class="result-card rounded-2xl p-8 max-w-lg w-full relative">
+                    <button onclick="closeCryptoModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-xl">✕</button>
+                    <h3 class="text-xl font-bold mb-4">₿ Pay with Crypto</h3>
+
+                    <div id="cryptoStep1">
+                        <p class="text-zinc-400 text-sm mb-4">Send the exact amount to the wallet address below, then submit your transaction hash.</p>
+
+                        <div class="mb-4">
+                            <label class="text-sm text-zinc-400 block mb-1">Select Plan</label>
+                            <select id="cryptoPlan" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm" onchange="updateCryptoAmount()">
+                                <option value="pro">Pro — $9/mo (≈ $9 USDT)</option>
+                                <option value="enterprise">Enterprise — $29/mo (≈ $29 USDT)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-sm text-zinc-400 block mb-1">Your Email</label>
+                            <input type="email" id="cryptoEmail" placeholder="you@email.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-sm text-zinc-400 block mb-1">Send to this address (BSC/ETH — USDT)</label>
+                            <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                <code class="text-sm text-green-400 flex-1 break-all">0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643</code>
+                                <button onclick="copyToClipboard('0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643')" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-sm text-zinc-400 block mb-1">Amount</label>
+                            <div class="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                <span class="text-lg font-bold text-yellow-400" id="cryptoAmount">$9 USDT</span>
+                                <span class="text-zinc-500 text-xs ml-2">(BSC or ETH network)</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-sm text-zinc-400 block mb-1">Transaction Hash</label>
+                            <input type="text" id="cryptoTxHash" placeholder="0x..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono">
+                        </div>
+
+                        <button onclick="submitCryptoPayment()" id="cryptoSubmitBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all font-semibold text-sm">
+                            Submit Payment
+                        </button>
+
+                        <p class="text-zinc-600 text-xs mt-3 text-center">Verification within 24h. You'll receive your API key via email.</p>
+                    </div>
+
+                    <div id="cryptoStep2" class="hidden text-center py-8">
+                        <div class="text-4xl mb-4">✅</div>
+                        <h4 class="text-lg font-bold mb-2">Payment Submitted!</h4>
+                        <p class="text-zinc-400 text-sm">We'll verify your transaction and send your API key to your email within 24 hours.</p>
+                        <button onclick="closeCryptoModal()" class="mt-4 px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout Setup Modal (temporary until LemonSqueezy configured) -->
+            <div id="checkoutSetupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8);">
+                <div class="result-card rounded-2xl p-8 max-w-md w-full relative text-center">
+                    <button onclick="document.getElementById('checkoutSetupModal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-xl">✕</button>
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h3 class="text-xl font-bold mb-2">Coming Very Soon!</h3>
+                    <p class="text-zinc-400 text-sm mb-4">We're setting up payment processing. In the meantime:</p>
+                    <div class="space-y-3 text-left">
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                            <span class="text-lg">📧</span>
+                            <div>
+                                <p class="text-sm font-semibold">Email us directly</p>
+                                <a href="mailto:info@chainshieldsentinel.tech" class="text-indigo-400 text-xs">info@chainshieldsentinel.tech</a>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                            <span class="text-lg">₿</span>
+                            <div>
+                                <p class="text-sm font-semibold">Pay with crypto</p>
+                                <p class="text-zinc-500 text-xs">USDT/BNB/ETH accepted</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('checkoutSetupModal').classList.add('hidden'); openCryptoModal()" class="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 font-semibold text-sm">
+                        Pay with Crypto Now
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1856,6 +1952,86 @@ print(result.summary)
                 });
             }, 500);
         });
+
+        // ===== LEMONSQUEEZY CHECKOUT =====
+        const LEMONSQUEEZY_STORE_ID = 'YOUR_STORE_ID'; // Will be replaced when configured
+        const PRO_VARIANT_ID = 'YOUR_PRO_VARIANT_ID';
+        const ENTERPRISE_VARIANT_ID = 'YOUR_ENTERPRISE_VARIANT_ID';
+
+        function openCheckout(plan) {
+            // For now, show a setup instructions modal since we need LemonSqueezy config
+            const modal = document.getElementById('checkoutSetupModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        // ===== CRYPTO PAYMENT MODAL =====
+        function openCryptoModal() {
+            document.getElementById('cryptoModal').classList.remove('hidden');
+            document.getElementById('cryptoStep1').classList.remove('hidden');
+            document.getElementById('cryptoStep2').classList.add('hidden');
+        }
+
+        function closeCryptoModal() {
+            document.getElementById('cryptoModal').classList.add('hidden');
+        }
+
+        function updateCryptoAmount() {
+            const plan = document.getElementById('cryptoPlan').value;
+            document.getElementById('cryptoAmount').textContent = plan === 'pro' ? '$9 USDT' : '$29 USDT';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show copied feedback
+                const btn = event.target;
+                const original = btn.textContent;
+                btn.textContent = '✓';
+                setTimeout(() => btn.textContent = original, 1000);
+            });
+        }
+
+        async function submitCryptoPayment() {
+            const email = document.getElementById('cryptoEmail').value;
+            const plan = document.getElementById('cryptoPlan').value;
+            const txHash = document.getElementById('cryptoTxHash').value;
+
+            if (!email || !txHash) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const btn = document.getElementById('cryptoSubmitBtn');
+            btn.textContent = 'Submitting...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/crypto/payment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: email,
+                        plan: plan,
+                        tx_hash: txHash,
+                        chain: 'bsc',
+                        wallet_address: '0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643'
+                    })
+                });
+
+                if (resp.ok) {
+                    document.getElementById('cryptoStep1').classList.add('hidden');
+                    document.getElementById('cryptoStep2').classList.remove('hidden');
+                } else {
+                    const err = await resp.json();
+                    alert(err.detail || 'Error submitting payment');
+                    btn.textContent = 'Submit Payment';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                alert('Network error. Please try again.');
+                btn.textContent = 'Submit Payment';
+                btn.disabled = false;
+            }
+        }
     </script>
 
 </body>
