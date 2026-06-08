@@ -1,0 +1,11 @@
+[
+  {
+    "email": "test@example.com",
+    "api_key": "cs_live_6adeeeaa96f182b2da19fa5bacbe8030b8f8c0ff7317241f",
+    "plan": "free",
+    "created_at": "2026-06-08T09:30:37Z",
+    "subscription_id": null,
+    "subscription_status": "free",
+    "expires_at": null
+  }
+]

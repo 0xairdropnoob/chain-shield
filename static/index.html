@@ -236,6 +236,7 @@
                 <a href="#launchpads" class="nav-link">Launchpads</a>
                 <a href="#pricing" class="nav-link">Pricing</a>
                 <a href="/docs" class="nav-link" style="color:#818cf8;font-weight:600;">API Docs</a>
+                <button onclick="openAccountModal()" class="nav-link cursor-pointer" id="accountNavBtn" style="display:none;">👤 Account</button>
             </div>
             <!-- Mobile menu button -->
             <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="sm:hidden text-zinc-400 hover:text-white p-2">
@@ -922,9 +923,9 @@
                             <span class="text-zinc-600">API access</span>
                         </li>
                     </ul>
-                    <a href="#scanner" class="block text-center py-3 px-6 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all font-semibold text-sm">
+                    <button onclick="openRegisterModal()" class="block w-full text-center py-3 px-6 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all font-semibold text-sm cursor-pointer">
                         Start Free
-                    </a>
+                    </button>
                 </div>
                 
                 <!-- Pro Tier — Main -->
@@ -2056,7 +2057,198 @@ print(result.summary)
                 btn.disabled = false;
             }
         }
+
+        // ===== REGISTRATION =====
+        function openRegisterModal() {
+            document.getElementById('registerModal').classList.remove('hidden');
+            document.getElementById('registerStep1').classList.remove('hidden');
+            document.getElementById('registerStep2').classList.add('hidden');
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').classList.add('hidden');
+        }
+
+        async function registerUser() {
+            const email = document.getElementById('registerEmail').value;
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email');
+                return;
+            }
+
+            const btn = document.getElementById('registerBtn');
+            btn.textContent = 'Creating...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: email})
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('newApiKey').textContent = data.api_key;
+                    document.getElementById('registerStep1').classList.add('hidden');
+                    document.getElementById('registerStep2').classList.remove('hidden');
+
+                    // Save to localStorage
+                    localStorage.setItem('cs_api_key', data.api_key);
+                    localStorage.setItem('cs_email', email);
+
+                    // Show account button
+                    document.getElementById('accountNavBtn').style.display = 'block';
+                } else {
+                    const err = await resp.json();
+                    alert(err.detail || 'Registration failed');
+                }
+            } catch(e) {
+                alert('Network error. Please try again.');
+            }
+
+            btn.textContent = 'Get Free API Key';
+            btn.disabled = false;
+        }
+
+        // ===== ACCOUNT =====
+        function openAccountModal() {
+            const apiKey = localStorage.getItem('cs_api_key');
+            if (!apiKey) {
+                openRegisterModal();
+                return;
+            }
+
+            document.getElementById('accountModal').classList.remove('hidden');
+            loadAccountInfo(apiKey);
+        }
+
+        async function loadAccountInfo(apiKey) {
+            const content = document.getElementById('accountContent');
+            content.innerHTML = '<div class="text-center py-8"><div class="inline-block w-8 h-8 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div></div>';
+
+            try {
+                const resp = await fetch('/api/auth/me', {
+                    headers: {'X-API-Key': apiKey}
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const isPro = data.plan === 'pro' || data.plan === 'enterprise';
+                    const planBadge = isPro ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+
+                    content.innerHTML = `
+                        <div class="text-center mb-6">
+                            <div class="text-3xl mb-2">👤</div>
+                            <h3 class="text-xl font-bold">My Account</h3>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl">
+                                <span class="text-zinc-400 text-sm">Email</span>
+                                <span class="text-sm font-medium">${data.email}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl">
+                                <span class="text-zinc-400 text-sm">Plan</span>
+                                <span class="badge ${planBadge} text-xs">${data.plan.toUpperCase()}</span>
+                            </div>
+
+                            <div class="p-3 bg-white/[0.02] rounded-xl">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-zinc-400 text-sm">API Key</span>
+                                    <button onclick="copyToClipboard('${data.api_key}')" class="text-zinc-500 hover:text-white text-xs">📋 Copy</button>
+                                </div>
+                                <code class="text-sm text-green-400 break-all">${data.api_key}</code>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl">
+                                <span class="text-zinc-400 text-sm">Member Since</span>
+                                <span class="text-sm">${new Date(data.created_at).toLocaleDateString()}</span>
+                            </div>
+
+                            ${data.expires_at ? `
+                            <div class="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl">
+                                <span class="text-zinc-400 text-sm">Expires</span>
+                                <span class="text-sm">${new Date(data.expires_at).toLocaleDateString()}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${!isPro ? `
+                        <div class="mt-6 text-center">
+                            <p class="text-zinc-500 text-xs mb-3">Unlock all features with Pro</p>
+                            <button onclick="document.getElementById('accountModal').classList.add('hidden'); openCryptoModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 font-semibold text-sm">
+                                ₿ Upgrade to Pro — $9/mo
+                            </button>
+                        </div>
+                        ` : ''}
+                    `;
+                } else {
+                    content.innerHTML = '<p class="text-center text-red-400">Failed to load account info</p>';
+                }
+            } catch(e) {
+                content.innerHTML = '<p class="text-center text-red-400">Network error</p>';
+            }
+        }
+
+        // ===== AUTO-LOGIN CHECK =====
+        (function() {
+            const apiKey = localStorage.getItem('cs_api_key');
+            if (apiKey) {
+                const accountBtn = document.getElementById('accountNavBtn');
+                if (accountBtn) accountBtn.style.display = 'block';
+            }
+        })();
     </script>
 
+    <!-- ===== REGISTER MODAL ===== -->
+    <div id="registerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8);">
+        <div class="result-card rounded-2xl p-8 max-w-md w-full relative">
+            <button onclick="closeRegisterModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-xl">✕</button>
+            <div id="registerStep1">
+                <div class="text-center mb-6">
+                    <div class="text-4xl mb-3">🚀</div>
+                    <h3 class="text-xl font-bold mb-2">Get Your Free API Key</h3>
+                    <p class="text-zinc-400 text-sm">Enter your email to get started. No password needed.</p>
+                </div>
+                <div class="mb-4">
+                    <input type="email" id="registerEmail" placeholder="you@email.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm focus:outline-none input-glow transition-all">
+                </div>
+                <button onclick="registerUser()" id="registerBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold text-sm">
+                    Get Free API Key
+                </button>
+                <p class="text-zinc-600 text-xs mt-3 text-center">Free tier: 20 scans/min, basic safety report, 9 chains</p>
+            </div>
+            <div id="registerStep2" class="hidden text-center py-4">
+                <div class="text-4xl mb-4">✅</div>
+                <h3 class="text-xl font-bold mb-2">You're In!</h3>
+                <p class="text-zinc-400 text-sm mb-4">Your free API key:</p>
+                <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-4">
+                    <code class="text-sm text-green-400 flex-1 break-all" id="newApiKey">cs_live_...</code>
+                    <button onclick="copyToClipboard(document.getElementById('newApiKey').textContent)" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
+                </div>
+                <p class="text-zinc-500 text-xs mb-4">Save this key! You'll need it for API access.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeRegisterModal()" class="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold">
+                        Continue Free
+                    </button>
+                    <button onclick="closeRegisterModal(); openCheckout('pro')" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-sm font-semibold">
+                        Upgrade to Pro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNT MODAL ===== -->
+    <div id="accountModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8);">
+        <div class="result-card rounded-2xl p-8 max-w-lg w-full relative">
+            <button onclick="document.getElementById('accountModal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-xl">✕</button>
+            <div id="accountContent">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -19,6 +19,93 @@ import hmac
 import hashlib
 import json as json_module
 from api_keys import api_key_manager
+import secrets as _secrets
+
+
+# === USER MANAGEMENT ===
+USERS_FILE = os.path.join(os.path.dirname(__file__), "data", "users.json")
+
+
+class UserManager:
+    """Manages email-based user registration and accounts."""
+
+    def __init__(self):
+        os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
+        self.users = self._load()
+
+    def _load(self) -> list:
+        if os.path.exists(USERS_FILE):
+            try:
+                with open(USERS_FILE) as f:
+                    return json_module.load(f)
+            except Exception:
+                return []
+        return []
+
+    def _save(self):
+        with open(USERS_FILE, "w") as f:
+            json_module.dump(self.users, f, indent=2)
+
+    def _generate_api_key(self) -> str:
+        return f"cs_live_{_secrets.token_hex(24)}"
+
+    def register(self, email: str) -> dict:
+        """Register a new user or return existing user."""
+        existing = self.get_by_email(email)
+        if existing:
+            return existing
+        api_key = self._generate_api_key()
+        user = {
+            "email": email,
+            "api_key": api_key,
+            "plan": "free",
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "subscription_id": None,
+            "subscription_status": "free",
+            "expires_at": None,
+        }
+        self.users.append(user)
+        self._save()
+        # Also register key in the api_key_manager so existing validation works
+        api_key_manager.keys[api_key] = {
+            "user_id": email,
+            "plan": "free",
+            "created_at": user["created_at"],
+            "is_active": True,
+            "usage_count": 0,
+            "last_used": None,
+        }
+        api_key_manager._save_keys()
+        return user
+
+    def get_by_email(self, email: str) -> Optional[dict]:
+        for u in self.users:
+            if u.get("email") == email:
+                return u
+        return None
+
+    def get_by_api_key(self, api_key: str) -> Optional[dict]:
+        for u in self.users:
+            if u.get("api_key") == api_key:
+                return u
+        return None
+
+    def upgrade_plan(self, api_key: str, plan: str) -> bool:
+        user = self.get_by_api_key(api_key)
+        if user:
+            user["plan"] = plan
+            self._save()
+            return True
+        return False
+
+    def is_pro(self, api_key: str) -> bool:
+        user = self.get_by_api_key(api_key)
+        if user:
+            return user.get("plan") in ("pro", "enterprise")
+        return False
+
+
+user_manager = UserManager()
 
 app = FastAPI(
     title="Chain Sentinel",
@@ -1281,6 +1368,85 @@ async def approve_crypto_payment(req: CryptoApproveRequest, request: Request):
         "api_key": result.get("api_key"),
         "email": result["email"],
         "plan": result["plan"],
+    }
+
+
+
+
+# === USER AUTH ENDPOINTS ===
+
+class RegisterRequest(BaseModel):
+    email: str
+
+
+class UpgradeRequest(BaseModel):
+    tx_hash: str
+    chain: str = "bsc"
+    plan: str = "pro"
+
+
+@app.post("/api/auth/register")
+async def auth_register(req: RegisterRequest):
+    """Register with email and get a free API key."""
+    if not req.email or "@" not in req.email:
+        raise HTTPException(status_code=400, detail="Valid email required.")
+    user = user_manager.register(req.email)
+    return {
+        "api_key": user["api_key"],
+        "email": user["email"],
+        "plan": user["plan"],
+        "message": "Welcome! Your free API key is ready.",
+    }
+
+
+@app.get("/api/auth/me")
+async def auth_me(request: Request):
+    """Get current user info by API key."""
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        raise HTTPException(status_code=401, detail="X-API-Key header required.")
+    user = user_manager.get_by_api_key(api_key)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return {
+        "email": user["email"],
+        "plan": user["plan"],
+        "api_key": user["api_key"],
+        "created_at": user["created_at"],
+        "subscription_status": user.get("subscription_status", "free"),
+        "expires_at": user.get("expires_at"),
+    }
+
+
+@app.post("/api/auth/upgrade")
+async def auth_upgrade(req: UpgradeRequest, request: Request):
+    """Submit a crypto payment to upgrade plan."""
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        raise HTTPException(status_code=401, detail="X-API-Key header required.")
+    user = user_manager.get_by_api_key(api_key)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if req.plan not in ("pro", "enterprise"):
+        raise HTTPException(status_code=400, detail="Invalid plan. Must be 'pro' or 'enterprise'.")
+
+    # Store as a pending crypto payment
+    wallet_map = {
+        "bsc": CRYPTO_WALLET_BSC,
+        "eth": CRYPTO_WALLET_ETH,
+        "sol": CRYPTO_WALLET_SOL,
+    }
+    wallet = wallet_map.get(req.chain, CRYPTO_WALLET_BSC)
+    subscription_manager.add_crypto_payment(
+        email=user["email"],
+        plan=req.plan,
+        tx_hash=req.tx_hash,
+        chain=req.chain,
+        wallet_address=wallet,
+    )
+    return {
+        "status": "pending",
+        "message": "Payment submitted. Pro access will be activated within 24h.",
     }
 
 
