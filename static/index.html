@@ -1634,7 +1634,7 @@ print(result.summary)
             badge.textContent = data.plan?.toUpperCase() || 'FREE';
 
             if (!data.trades || data.trades.length === 0) {
-                list.innerHTML = '<div class="text-zinc-500 text-sm text-center py-4">No recent trades found for this wallet.</div>';
+                list.innerHTML = '<div class="text-zinc-400 text-sm text-center py-4">No recent ERC-20 trades found.<br><span class="text-zinc-600 text-xs">This wallet may have no token transfers in the last 2 hours, or only native token (BNB/ETH) transfers.</span></div>';
             } else {
                 data.trades.forEach(t => {
                     const actionColor = t.action === 'buy' ? 'text-green-400' : 'text-red-400';

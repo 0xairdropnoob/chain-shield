@@ -69,6 +69,17 @@ TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523
 # DexScreener API (free, no key)
 DEXSCREENER_API = "https://api.dexscreener.com/latest/dex"
 
+# Etherscan-compatible APIs (free tier, no key — 5 req/sec)
+EXPLORER_API = {
+    "bsc": "https://api.bscscan.com/api",
+    "eth": "https://api.etherscan.io/api",
+    "base": "https://api.basescan.org/api",
+    "arbitrum": "https://api.arbiscan.io/api",
+    "polygon": "https://api.polygonscan.com/api",
+    "avalanche": "https://api.snowtrace.io/api",
+    "optimism": "https://api-optimistic.etherscan.io/api",
+}
+
 
 @dataclass
 class Trade:
@@ -232,10 +243,10 @@ class WalletTracker:
     async def get_wallet_trades(self, address: str, chains: list = None, limit: int = 20) -> list:
         """
         Get recent trades for a wallet.
-        Scans transfer logs on-chain to detect DEX trades.
+        Uses Etherscan-compatible APIs (free, reliable) with RPC fallback.
         """
         if chains is None:
-            chains = ["bsc", "eth"]  # Default to most popular
+            chains = ["bsc", "eth"]
 
         all_trades = []
 
@@ -246,28 +257,120 @@ class WalletTracker:
                 continue
 
             try:
-                latest_block = await self._get_latest_block(chain)
-                if latest_block <= 0:
+                # Primary: Use Etherscan-compatible API (needs API key for V2)
+                trades = await self._get_explorer_trades(chain, address, limit)
+                if trades:
+                    all_trades.extend(trades)
                     continue
 
-                # Scan last ~5000 blocks (~2-3 hours on most chains)
-                from_block = max(0, latest_block - 5000)
-
-                # Get outgoing transfers (sells)
-                out_logs = await self._get_transfer_logs(chain, address, from_block, latest_block, "from")
-                # Get incoming transfers (buys)
-                in_logs = await self._get_transfer_logs(chain, address, from_block, latest_block, "to")
-
-                # Process logs into trades
-                trades = await self._process_evm_logs(chain, address, in_logs, out_logs)
+                # Fallback: RPC eth_getLogs (moderate range)
+                trades = await self._get_rpc_trades(chain, address, limit)
                 all_trades.extend(trades)
             except Exception as e:
                 print(f"Error scanning {chain}: {e}")
                 continue
 
-        # Sort by timestamp descending, limit
         all_trades.sort(key=lambda t: t.timestamp, reverse=True)
         return all_trades[:limit]
+
+    async def _get_explorer_trades(self, chain: str, address: str, limit: int = 20) -> list:
+        """Get trades using Etherscan-compatible API (free, no key)."""
+        api_url = EXPLORER_API.get(chain)
+        if not api_url:
+            return []
+
+        session = await self._get_session()
+        trades = []
+
+        try:
+            # Get ERC-20 token transfers
+            params = {
+                "module": "account",
+                "action": "tokentx",
+                "address": address,
+                "page": 1,
+                "offset": min(limit * 2, 50),  # fetch extra for filtering
+                "sort": "desc",
+            }
+            async with session.get(api_url, params=params) as resp:
+                data = await resp.json()
+
+            if data.get("status") != "1" or not data.get("result"):
+                return []
+
+            seen_txs = set()
+            for tx in data["result"][:limit * 2]:
+                tx_hash = tx.get("hash", "")
+                if tx_hash in seen_txs:
+                    continue
+                seen_txs.add(tx_hash)
+
+                token_addr = tx.get("contractAddress", "")
+                token_symbol = tx.get("tokenSymbol", "???")
+                token_name = tx.get("tokenName", "Unknown")
+                decimals = int(tx.get("tokenDecimal", 18))
+                value_raw = int(tx.get("value", 0))
+                value = value_raw / (10 ** decimals) if decimals > 0 else value_raw
+
+                # Determine buy/sell: if 'to' is wallet → buy, if 'from' is wallet → sell
+                is_buy = tx.get("to", "").lower() == address.lower()
+                action = "buy" if is_buy else "sell"
+
+                # Skip native token wraps
+                if token_addr.lower() == WRAPPED_NATIVE.get(chain, "").lower():
+                    continue
+
+                # Get price from DexScreener (cached)
+                token_info = await self._dexscreener_token(token_addr)
+                price_usd = float(token_info.get("priceUsd", 0) or 0)
+                amount_usd = value * price_usd
+
+                timestamp = int(tx.get("timeStamp", int(time.time())))
+
+                trades.append(Trade(
+                    tx_hash=tx_hash,
+                    chain=chain,
+                    timestamp=timestamp,
+                    action=action,
+                    token_address=token_addr,
+                    token_symbol=token_symbol,
+                    token_name=token_name,
+                    amount=value,
+                    amount_usd=amount_usd,
+                    price_usd=price_usd,
+                    dex=token_info.get("dexId", "unknown"),
+                    pair_address=token_info.get("pairAddress", ""),
+                ))
+
+                if len(trades) >= limit:
+                    break
+
+            return trades
+
+        except Exception as e:
+            print(f"Explorer API error ({chain}): {e}")
+            return []
+
+    async def _get_rpc_trades(self, chain: str, address: str, limit: int = 20) -> list:
+        """Fallback: get trades via RPC eth_getLogs (moderate block range)."""
+        try:
+            latest_block = await self._get_latest_block(chain)
+            if latest_block <= 0:
+                return []
+
+            # Moderate range: ~2000 blocks (~2 hours on BSC, ~6 hours on ETH)
+            from_block = max(0, latest_block - 2000)
+
+            out_logs = await self._get_transfer_logs(chain, address, from_block, latest_block, "from")
+            in_logs = await self._get_transfer_logs(chain, address, from_block, latest_block, "to")
+
+            if not in_logs and not out_logs:
+                return []
+
+            return await self._process_evm_logs(chain, address, in_logs, out_logs)
+        except Exception as e:
+            print(f"RPC fallback error ({chain}): {e}")
+            return []
 
     async def _process_evm_logs(self, chain: str, wallet: str, in_logs: list, out_logs: list) -> list:
         """Process raw transfer logs into structured trades."""
