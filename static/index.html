@@ -545,6 +545,40 @@
                 <h3 class="text-2xl font-bold mb-2">👛 Smart Wallet <span class="text-purple-400">Tracking</span></h3>
                 <p class="text-zinc-400 max-w-xl mx-auto">Follow the money. Track whale wallets, copy-trade smart money, and get alerted before the crowd moves.</p>
             </div>
+
+            <!-- Wallet Search Box (LIVE) -->
+            <div class="result-card rounded-2xl p-6 mb-6">
+                <h4 class="font-semibold mb-3 text-center">🔍 Try It — Track Any Wallet</h4>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="walletAddress" placeholder="Paste wallet address (0x... or Solana)" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm placeholder-zinc-500 focus:outline-none input-glow transition-all" autocomplete="off" spellcheck="false">
+                    <button onclick="trackWallet()" id="walletTrackBtn" class="px-8 py-4 rounded-xl font-semibold text-white text-sm whitespace-nowrap cursor-pointer" style="background: linear-gradient(135deg, #7c3aed, #a855f7);">
+                        👛 Track Wallet
+                    </button>
+                </div>
+                <p class="text-zinc-600 text-xs mt-2 text-center">Free: 3 recent trades · Pro: full PnL, all chains, unlimited history</p>
+            </div>
+
+            <!-- Wallet Results -->
+            <div id="walletResults" class="hidden mb-6">
+                <div class="result-card rounded-2xl p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold">👛 Wallet Activity</h4>
+                        <span class="badge bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs" id="walletPlanBadge">FREE</span>
+                    </div>
+                    <div id="walletTradesList" class="space-y-2"></div>
+                    <div id="walletUpgradeMsg" class="hidden mt-4 text-center p-4 bg-indigo-500/5 rounded-xl border border-indigo-500/10">
+                        <p class="text-indigo-400 text-sm font-semibold" id="walletUpgradeText"></p>
+                        <a href="#pricing" class="inline-block mt-2 text-xs text-indigo-300 hover:text-indigo-200 transition">View Pro Plans →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Loading -->
+            <div id="walletLoading" class="hidden text-center py-8">
+                <div class="inline-block w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-3"></div>
+                <p class="text-zinc-400 text-sm">Scanning wallet across chains...</p>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div class="result-card rounded-xl p-5">
                     <div class="text-2xl mb-3">🐋</div>
@@ -623,6 +657,25 @@
                     <div class="text-2xl mb-1">🦅</div>
                     <div class="font-semibold text-sm">Birdeye</div>
                     <div class="text-zinc-600 text-xs">Multi-chain</div>
+                </div>
+            </div>
+
+            <!-- Live Trending Feed (LIVE) -->
+            <div class="result-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold">📡 Live Trending Tokens</h4>
+                    <button onclick="loadTrending()" class="text-xs text-indigo-400 hover:text-indigo-300 transition cursor-pointer">🔄 Refresh</button>
+                </div>
+                <div id="trendingLoading" class="text-center py-6">
+                    <div class="inline-block w-8 h-8 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mb-2"></div>
+                    <p class="text-zinc-500 text-xs">Loading trending tokens...</p>
+                </div>
+                <div id="trendingFeed" class="hidden">
+                    <div id="trendingList" class="space-y-2"></div>
+                    <div id="trendingUpgradeMsg" class="hidden mt-4 text-center p-4 bg-indigo-500/5 rounded-xl border border-indigo-500/10">
+                        <p class="text-indigo-400 text-sm font-semibold">🔒 Showing 5 of many. Upgrade to Pro to see prices, volume, and all trending tokens.</p>
+                        <a href="#pricing" class="inline-block mt-2 text-xs text-indigo-300 hover:text-indigo-200 transition">View Pro Plans →</a>
+                    </div>
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1307,6 +1360,165 @@ print(result.summary)
                 downloadShareCard();
             }
         }
+
+        // ===== SMART WALLET TRACKING =====
+        async function trackWallet() {
+            const address = document.getElementById('walletAddress').value.trim();
+            if (!address) return;
+
+            document.getElementById('walletLoading').classList.remove('hidden');
+            document.getElementById('walletResults').classList.add('hidden');
+
+            try {
+                const resp = await fetch('/api/v1/wallet/trades', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, chains: ['bsc', 'eth'] })
+                });
+                const data = await resp.json();
+                displayWalletResults(data);
+            } catch (err) {
+                console.error('Wallet track failed:', err);
+                alert('Failed to track wallet. Please check the address.');
+            } finally {
+                document.getElementById('walletLoading').classList.add('hidden');
+            }
+        }
+
+        function displayWalletResults(data) {
+            const list = document.getElementById('walletTradesList');
+            const badge = document.getElementById('walletPlanBadge');
+            const upgradeMsg = document.getElementById('walletUpgradeMsg');
+            const upgradeText = document.getElementById('walletUpgradeText');
+
+            list.innerHTML = '';
+            badge.textContent = data.plan?.toUpperCase() || 'FREE';
+
+            if (!data.trades || data.trades.length === 0) {
+                list.innerHTML = '<div class="text-zinc-500 text-sm text-center py-4">No recent trades found for this wallet.</div>';
+            } else {
+                data.trades.forEach(t => {
+                    const actionColor = t.action === 'buy' ? 'text-green-400' : 'text-red-400';
+                    const actionIcon = t.action === 'buy' ? '🟢' : '🔴';
+                    const locked = t.locked ? ' <span class="text-zinc-600 text-xs">(Pro)</span>' : '';
+                    const chainBadge = `<span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">${t.chain}</span>`;
+
+                    list.innerHTML += `
+                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div class="flex items-center gap-3">
+                                <span>${actionIcon}</span>
+                                <div>
+                                    <span class="font-semibold text-sm ${actionColor}">${t.action?.toUpperCase()}</span>
+                                    <span class="text-white text-sm font-medium ml-1">${t.token || '???'}</span>
+                                    ${chainBadge}${locked}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-zinc-300">${t.amount ? t.amount.toFixed(4) : '***'}</div>
+                                ${t.amount_usd ? `<div class="text-xs text-zinc-500">$${t.amount_usd.toFixed(2)}</div>` : ''}
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // Show upgrade message if present
+            if (data.upgrade_message) {
+                upgradeMsg.classList.remove('hidden');
+                upgradeText.textContent = data.upgrade_message;
+            } else {
+                upgradeMsg.classList.add('hidden');
+            }
+
+            // Show hidden trades count
+            if (data.total_hidden > 0) {
+                list.innerHTML += `
+                    <div class="text-center py-3 text-zinc-500 text-xs">
+                        🔒 ${data.total_hidden} more trades hidden — <a href="#pricing" class="text-indigo-400 hover:text-indigo-300">Upgrade to Pro</a>
+                    </div>`;
+            }
+
+            document.getElementById('walletResults').classList.remove('hidden');
+        }
+
+        // Enter key for wallet search
+        document.getElementById('walletAddress')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') trackWallet();
+        });
+
+        // ===== LAUNCHPAD TRENDING FEED =====
+        async function loadTrending() {
+            document.getElementById('trendingLoading').classList.remove('hidden');
+            document.getElementById('trendingFeed').classList.add('hidden');
+
+            try {
+                const resp = await fetch('/api/v1/launchpads/trending');
+                const data = await resp.json();
+                displayTrending(data);
+            } catch (err) {
+                console.error('Trending load failed:', err);
+                document.getElementById('trendingLoading').innerHTML = '<p class="text-zinc-500 text-sm">Failed to load trending tokens.</p>';
+            }
+        }
+
+        function displayTrending(data) {
+            const list = document.getElementById('trendingList');
+            const upgradeMsg = document.getElementById('trendingUpgradeMsg');
+
+            list.innerHTML = '';
+
+            if (!data.tokens || data.tokens.length === 0) {
+                list.innerHTML = '<div class="text-zinc-500 text-sm text-center py-4">No trending tokens found.</div>';
+            } else {
+                data.tokens.forEach(t => {
+                    const isLocked = t.locked;
+                    const price = isLocked ? '***' : (t.price_usd ? `$${parseFloat(t.price_usd).toFixed(8)}` : '—');
+                    const mc = isLocked ? '***' : (t.market_cap ? `$${formatNum(t.market_cap)}` : '—');
+                    const chainEmoji = { solana: '🟣', bsc: '🟡', eth: '🔷', base: '🔵', arbitrum: '🌀' }[t.chain] || '⚪';
+
+                    list.innerHTML += `
+                        <div class="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm">${chainEmoji}</span>
+                                <div>
+                                    <span class="font-semibold text-sm text-white">${t.symbol || '???'}</span>
+                                    <span class="text-zinc-500 text-xs ml-1">${t.name || ''}</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 ml-1">${t.chain}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-zinc-300 font-mono">${price}</div>
+                                <div class="text-xs text-zinc-500">MC: ${mc}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // Show upgrade message for free tier
+            if (data.upgrade_message) {
+                upgradeMsg.classList.remove('hidden');
+            } else {
+                upgradeMsg.classList.add('hidden');
+            }
+
+            document.getElementById('trendingLoading').classList.add('hidden');
+            document.getElementById('trendingFeed').classList.remove('hidden');
+        }
+
+        // Auto-load trending on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lazy load trending when section is visible
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        loadTrending();
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            const launchpadSection = document.getElementById('launchpads');
+            if (launchpadSection) observer.observe(launchpadSection);
+        });
     </script>
 
 </body>
