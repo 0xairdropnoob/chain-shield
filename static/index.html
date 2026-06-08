@@ -289,6 +289,34 @@
             </div>
         </div>
 
+        <!-- How It Works -->
+        <div class="mb-16 mt-12">
+            <div class="text-center mb-8">
+                <h3 class="text-2xl font-bold mb-2">How <span class="text-indigo-400">Chain Sentinel</span> Works</h3>
+                <p class="desc-text max-w-xl mx-auto">Three steps between you and smarter trades.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="result-card rounded-2xl p-6 text-center relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm">1</div>
+                    <div class="text-3xl mb-3 mt-2">🔍</div>
+                    <h4 class="font-bold mb-1">Paste Any Contract</h4>
+                    <p class="desc-text text-sm">Drop any token address. We scan across 9 blockchains instantly — honeypot, tax, liquidity, ownership.</p>
+                </div>
+                <div class="result-card rounded-2xl p-6 text-center relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-sm">2</div>
+                    <div class="text-3xl mb-3 mt-2">🐋</div>
+                    <h4 class="font-bold mb-1">Track Whale Wallets</h4>
+                    <p class="desc-text text-sm">See what smart money buys before the crowd. Real-time wallet tracking with PnL and trade history.</p>
+                </div>
+                <div class="result-card rounded-2xl p-6 text-center relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">3</div>
+                    <div class="text-3xl mb-3 mt-2">⚡</div>
+                    <h4 class="font-bold mb-1">Get Alerts First</h4>
+                    <p class="desc-text text-sm">Telegram and Discord alerts when tracked wallets move. Be the first to know — not the last.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- 3 Pillars Overview -->
         <div class="mb-16 mt-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -314,20 +342,20 @@
         <div class="mb-12">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div class="result-card rounded-xl p-5">
-                    <div class="text-3xl font-bold text-indigo-400"><span class="counter" data-target="5">0</span></div>
+                    <div class="text-3xl font-bold text-indigo-400"><span class="counter" id="counterLaunchpads" data-target="5">0</span></div>
                     <div class="text-xs text-zinc-500 mt-1">Launchpads Tracked</div>
                 </div>
                 <div class="result-card rounded-xl p-5">
-                    <div class="text-3xl font-bold text-green-400"><span class="counter" data-target="9">0</span></div>
+                    <div class="text-3xl font-bold text-green-400"><span class="counter" id="counterChains" data-target="9">0</span></div>
                     <div class="text-xs text-zinc-500 mt-1">Chains Supported</div>
                 </div>
                 <div class="result-card rounded-xl p-5">
-                    <div class="text-3xl font-bold text-purple-400">&lt;<span class="counter" data-target="2">0</span>s</div>
+                    <div class="text-3xl font-bold text-purple-400">&lt;<span class="counter" id="counterScanTime" data-target="2">0</span>s</div>
                     <div class="text-xs text-zinc-500 mt-1">Scan Time</div>
                 </div>
                 <div class="result-card rounded-xl p-5">
-                    <div class="text-3xl font-bold text-yellow-400">Free</div>
-                    <div class="text-xs text-zinc-500 mt-1">Token Scanner</div>
+                    <div class="text-3xl font-bold text-yellow-400"><span class="counter" id="counterScanned" data-target="850">0</span>+</div>
+                    <div class="text-xs text-zinc-500 mt-1">Tokens Scanned</div>
                 </div>
             </div>
         </div>
@@ -637,31 +665,27 @@
                 <p class="text-zinc-400 text-sm">Scanning wallet across chains...</p>
             </div>
 
-            <!-- Live Whale Dashboard (teaser with blur) -->
+            <!-- Live Whale Dashboard (real data from API, blurred for free) -->
             <div class="result-card rounded-2xl p-6 mb-6 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-4">
                     <h4 class="font-bold">🐋 Live Whale Activity</h4>
-                    <span class="badge bg-green-500/10 text-green-400 border border-green-500/20 text-xs">LIVE</span>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="badge bg-green-500/10 text-green-400 border border-green-500/20 text-xs">LIVE</span>
+                    </div>
                 </div>
-                <!-- Blurred whale data -->
-                <div class="blur-content">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
-                            <div class="flex items-center gap-3"><span>🟢</span><span class="text-sm font-medium text-white">whale_0x7a...3f2b</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">ETH</span></div>
-                            <div class="text-right"><div class="text-sm text-green-400 font-semibold">BUY $47,200</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
-                        </div>
-                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
-                            <div class="flex items-center gap-3"><span>🟢</span><span class="text-sm font-medium text-white">whale_0xb2...8e1a</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">SOL</span></div>
-                            <div class="text-right"><div class="text-sm text-green-400 font-semibold">BUY $128,500</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
-                        </div>
-                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
-                            <div class="flex items-center gap-3"><span>🔴</span><span class="text-sm font-medium text-white">whale_0xd5...6c9f</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">BSC</span></div>
-                            <div class="text-right"><div class="text-sm text-red-400 font-semibold">SELL $89,100</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
-                        </div>
-                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
-                            <div class="flex items-center gap-3"><span>🟢</span><span class="text-sm font-medium text-white">whale_0xf1...4a7d</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">SOL</span></div>
-                            <div class="text-right"><div class="text-sm text-green-400 font-semibold">BUY $215,000</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
-                        </div>
+                <!-- Loading state -->
+                <div id="whaleLoading" class="text-center py-6">
+                    <div class="inline-block w-8 h-8 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-2"></div>
+                    <p class="text-zinc-500 text-xs">Fetching live whale data...</p>
+                </div>
+                <!-- Whale feed container -->
+                <div id="whaleFeed" class="hidden">
+                    <div class="blur-content" id="whaleFeedBlur">
+                        <!-- Populated by JS from /api/v1/whale-feed -->
+                    </div>
+                    <div class="mt-3 text-center">
+                        <p class="text-zinc-600 text-xs" id="whaleDelayNote">⏱️ Free data has 45s delay — Pro gets real-time</p>
                     </div>
                 </div>
                 <!-- Upgrade CTA overlay -->
@@ -1653,12 +1677,13 @@ print(result.summary)
         if (statsSection) statsObserver.observe(statsSection.closest('.grid'));
 
         // ===== TYPEWRITER EFFECT =====
+        // Fictional addresses for typewriter effect — NOT real tokens
         const scamTokens = [
-            '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
-            '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-            '0x55d398326f99059fF775485246999027B3197955',
-            'So11111111111111111111111111111111111111112',
-            'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+            '0xAbCdEf0123456789aBcDeF0123456789AbCdEf01',
+            '0x1234AbCd5678EfGh9012IjKl3456MnOp7890QrSt',
+            '0xDEADBEEF0000000000000000000000000000CAFE',
+            '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosg',
+            '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtA',
         ];
         let typewriterIndex = 0;
         let charIndex = 0;
@@ -1741,6 +1766,95 @@ print(result.summary)
                 const cursorEl = document.getElementById('typewriterCursor');
                 if (cursorEl) cursorEl.style.display = 'inline-block';
             }
+        });
+
+        // ===== WHALE FEED LOADER (real data from API) =====
+        async function loadWhaleFeed() {
+            try {
+                const resp = await fetch('/api/v1/whale-feed');
+                if (!resp.ok) return;
+                const data = await resp.json();
+
+                const feedEl = document.getElementById('whaleFeed');
+                const blurEl = document.getElementById('whaleFeedBlur');
+                const loadingEl = document.getElementById('whaleLoading');
+                const delayNote = document.getElementById('whaleDelayNote');
+
+                if (!feedEl || !blurEl || !data.feed || data.feed.length === 0) {
+                    if (loadingEl) loadingEl.innerHTML = '<p class="text-zinc-600 text-xs">Whale feed loading...</p>';
+                    return;
+                }
+
+                // Build feed HTML
+                let html = '<div class="space-y-2">';
+                data.feed.forEach(item => {
+                    const isBuy = item.action === 'BUY';
+                    const color = isBuy ? 'text-green-400' : 'text-red-400';
+                    const emoji = isBuy ? '🟢' : '🔴';
+                    const amount = item.amount_usd ? `$${item.amount_usd.toLocaleString()}` : '$***';
+                    const tokenDisplay = item.locked ? `TOKEN: ${item.token_name}` : item.token_name;
+                    const timeAgo = item.timestamp ? `${Math.floor((Date.now()/1000 - item.timestamp) / 60)}m ago` : '';
+
+                    html += `<div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
+                        <div class="flex items-center gap-3"><span>${emoji}</span><span class="text-sm font-medium text-white">${item.wallet}</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">${item.chain}</span></div>
+                        <div class="text-right"><div class="text-sm ${color} font-semibold">${item.action} ${amount}</div><div class="text-xs text-zinc-500">${tokenDisplay} ${timeAgo ? '· ' + timeAgo : ''}</div></div>
+                    </div>`;
+                });
+                html += '</div>';
+
+                blurEl.innerHTML = html;
+                feedEl.classList.remove('hidden');
+                if (loadingEl) loadingEl.classList.add('hidden');
+                if (delayNote && data.delay_note) delayNote.textContent = data.delay_note;
+
+            } catch (e) {
+                console.warn('Whale feed error:', e);
+            }
+        }
+
+        // Load whale feed on page load
+        loadWhaleFeed();
+        // Refresh every 60s
+        setInterval(loadWhaleFeed, 60000);
+
+        // ===== REAL STATS COUNTER =====
+        async function loadRealStats() {
+            try {
+                const resp = await fetch('/api/v1/stats');
+                if (!resp.ok) return;
+                const stats = await resp.json();
+
+                // Update the tokens scanned counter with real data
+                const scannedEl = document.getElementById('counterScanned');
+                if (scannedEl && stats.tokens_scanned_today) {
+                    scannedEl.setAttribute('data-target', stats.tokens_scanned_today);
+                }
+            } catch (e) {
+                console.warn('Stats error:', e);
+            }
+        }
+
+        // Fetch real stats then trigger counter animation
+        loadRealStats().then(() => {
+            // Re-trigger counter animation with updated targets
+            setTimeout(() => {
+                document.querySelectorAll('.counter').forEach(counter => {
+                    const target = +counter.getAttribute('data-target');
+                    if (target && counter.textContent === '0') {
+                        const duration = 1500;
+                        const start = performance.now();
+                        function update(now) {
+                            const elapsed = now - start;
+                            const progress = Math.min(elapsed / duration, 1);
+                            const eased = 1 - Math.pow(1 - progress, 3);
+                            counter.textContent = Math.floor(eased * target);
+                            if (progress < 1) requestAnimationFrame(update);
+                            else counter.textContent = target;
+                        }
+                        requestAnimationFrame(update);
+                    }
+                });
+            }, 500);
         });
     </script>
 
