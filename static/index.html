@@ -58,8 +58,24 @@
 
     <style>
         * { font-family: 'Inter', sans-serif; }
-        body { background: #0a0a0f; color: #e4e4e7; }
-        
+        body { background: #0a0a0f; color: #e4e4e7; line-height: 1.7; }
+
+        /* Soft description text */
+        .desc-text { color: #9ca3af; line-height: 1.8; }
+
+        /* Mobile spacing */
+        @media (max-width: 640px) {
+            main { padding-top: 2rem !important; }
+            .result-card { padding: 1.25rem !important; }
+            h2 { line-height: 1.3; }
+            p { line-height: 1.8; margin-bottom: 0.5rem; }
+            .grid { gap: 1rem !important; }
+            section { margin-bottom: 2rem; }
+        }
+
+        /* Sticky header */
+        header { position: sticky; top: 0; z-index: 50; }
+
         .glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
         .glow-yellow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
         .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
@@ -79,11 +95,22 @@
         .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); }
         .scan-btn:active { transform: translateY(0); }
         
+        /* Micro-interactions: hover glow + lift */
         .result-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.4s ease;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .result-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(129, 140, 248, 0.25);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.12), 0 0 0 1px rgba(129, 140, 248, 0.1);
+        }
+        .result-card:hover .feature-icon {
+            color: #a78bfa;
+            filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.4));
+        }
+        .feature-icon { transition: all 0.35s ease; }
         
         .warning-item { border-left: 3px solid #ef4444; }
         .positive-item { border-left: 3px solid #22c55e; }
@@ -103,6 +130,37 @@
             text-transform: uppercase; letter-spacing: 0.05em;
         }
         
+        /* Counter animation */
+        .counter { display: inline-block; }
+        
+        /* Typewriter cursor */
+        .typewriter-cursor { 
+            display: inline-block; 
+            width: 2px; height: 1em; 
+            background: #818cf8; 
+            margin-left: 2px; 
+            animation: blink 0.8s infinite; 
+            vertical-align: text-bottom;
+        }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        
+        /* Blur effect for whale data */
+        .blur-content {
+            filter: blur(6px);
+            user-select: none;
+            transition: filter 0.3s ease;
+        }
+        .blur-overlay {
+            position: relative;
+        }
+        .blur-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(transparent 30%, rgba(10,10,15,0.8) 100%);
+            pointer-events: none;
+        }
+
         /* Custom chain dropdown */
         .chain-dropdown { position: relative; }
         .chain-menu {
@@ -210,7 +268,7 @@
         <!-- Hero -->
         <div class="text-center mb-10">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-4">
-                🚀 Now tracking Smart Wallets + 5 Launchpads
+                🚀 Smart Wallet Tracking + 5 Launchpads — <strong>LIVE</strong>
             </div>
             <h2 class="text-4xl sm:text-5xl font-black mb-4 leading-tight">
                 See What <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Smart Money</span> Does<br class="hidden sm:block"> Before Everyone Else
@@ -219,20 +277,20 @@
                 Track whale wallets, scan new tokens from pump.fun & launchpads, and detect rugpulls — all in one platform.
             </p>
             <div class="flex flex-wrap justify-center gap-3 mt-6">
-                <a href="#scanner" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold text-white" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                <a href="#scanner" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white shadow-lg shadow-indigo-500/25" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
                     ⚡ Scan Token Free
                 </a>
-                <a href="#smart-wallets" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/10 transition">
+                <a href="#smart-wallets" class="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-zinc-400 border border-white/10 hover:border-purple-500/30 hover:text-purple-400 transition">
                     👛 Track Wallets
                 </a>
-                <a href="#launchpads" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold text-purple-400 border border-purple-500/30 hover:bg-purple-500/10 transition">
+                <a href="#launchpads" class="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-zinc-400 border border-white/10 hover:border-green-500/30 hover:text-green-400 transition">
                     🚀 Launchpads
                 </a>
             </div>
         </div>
 
         <!-- 3 Pillars Overview -->
-        <div class="mb-12">
+        <div class="mb-16 mt-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <a href="#scanner" class="result-card rounded-2xl p-6 text-center hover:border-indigo-500/30 transition-all group">
                     <div class="text-4xl mb-3">🛡️</div>
@@ -253,23 +311,23 @@
         </div>
 
         <!-- Social Proof -->
-        <div class="mb-10">
+        <div class="mb-12">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div class="result-card rounded-xl p-4">
-                    <div class="text-2xl font-bold text-indigo-400">5</div>
-                    <div class="text-xs text-zinc-500">Launchpads Tracked</div>
+                <div class="result-card rounded-xl p-5">
+                    <div class="text-3xl font-bold text-indigo-400"><span class="counter" data-target="5">0</span></div>
+                    <div class="text-xs text-zinc-500 mt-1">Launchpads Tracked</div>
                 </div>
-                <div class="result-card rounded-xl p-4">
-                    <div class="text-2xl font-bold text-green-400">9</div>
-                    <div class="text-xs text-zinc-500">Chains Supported</div>
+                <div class="result-card rounded-xl p-5">
+                    <div class="text-3xl font-bold text-green-400"><span class="counter" data-target="9">0</span></div>
+                    <div class="text-xs text-zinc-500 mt-1">Chains Supported</div>
                 </div>
-                <div class="result-card rounded-xl p-4">
-                    <div class="text-2xl font-bold text-purple-400">&lt;2s</div>
-                    <div class="text-xs text-zinc-500">Scan Time</div>
+                <div class="result-card rounded-xl p-5">
+                    <div class="text-3xl font-bold text-purple-400">&lt;<span class="counter" data-target="2">0</span>s</div>
+                    <div class="text-xs text-zinc-500 mt-1">Scan Time</div>
                 </div>
-                <div class="result-card rounded-xl p-4">
-                    <div class="text-2xl font-bold text-yellow-400">Free</div>
-                    <div class="text-xs text-zinc-500">Token Scanner</div>
+                <div class="result-card rounded-xl p-5">
+                    <div class="text-3xl font-bold text-yellow-400">Free</div>
+                    <div class="text-xs text-zinc-500 mt-1">Token Scanner</div>
                 </div>
             </div>
         </div>
@@ -365,11 +423,11 @@
                     <input 
                         type="text" 
                         id="tokenAddress"
-                        placeholder="Paste contract address (0x... or Solana address)"
+                        placeholder=""
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm placeholder-zinc-500 focus:outline-none input-glow transition-all"
                         autocomplete="off"
                         spellcheck="false"
-                    >
+                    ><span id="typewriterText" class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 text-sm pointer-events-none"></span><span class="typewriter-cursor" id="typewriterCursor"></span>
                     <button onclick="clearInput()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 hidden" id="clearBtn">✕</button>
                 </div>
                 <button onclick="scanToken()" id="scanBtn" class="scan-btn px-8 py-4 rounded-xl font-semibold text-white text-sm whitespace-nowrap">
@@ -540,7 +598,7 @@
         <div class="mt-16 mb-12" id="smart-wallets">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold mb-3">
-                    PRO FEATURE · <span class="bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded text-[10px] font-bold ml-1">COMING SOON</span>
+                    PRO FEATURE
                 </div>
                 <h3 class="text-2xl font-bold mb-2">👛 Smart Wallet <span class="text-purple-400">Tracking</span></h3>
                 <p class="text-zinc-400 max-w-xl mx-auto">Follow the money. Track whale wallets, copy-trade smart money, and get alerted before the crowd moves.</p>
@@ -577,6 +635,42 @@
             <div id="walletLoading" class="hidden text-center py-8">
                 <div class="inline-block w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-3"></div>
                 <p class="text-zinc-400 text-sm">Scanning wallet across chains...</p>
+            </div>
+
+            <!-- Live Whale Dashboard (teaser with blur) -->
+            <div class="result-card rounded-2xl p-6 mb-6 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold">🐋 Live Whale Activity</h4>
+                    <span class="badge bg-green-500/10 text-green-400 border border-green-500/20 text-xs">LIVE</span>
+                </div>
+                <!-- Blurred whale data -->
+                <div class="blur-content">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div class="flex items-center gap-3"><span>🟢</span><span class="text-sm font-medium text-white">whale_0x7a...3f2b</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">ETH</span></div>
+                            <div class="text-right"><div class="text-sm text-green-400 font-semibold">BUY $47,200</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
+                        </div>
+                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div class="flex items-center gap-3"><span>🟢</span><span class="text-sm font-medium text-white">whale_0xb2...8e1a</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">SOL</span></div>
+                            <div class="text-right"><div class="text-sm text-green-400 font-semibold">BUY $128,500</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
+                        </div>
+                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div class="flex items-center gap-3"><span>🔴</span><span class="text-sm font-medium text-white">whale_0xd5...6c9f</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">BSC</span></div>
+                            <div class="text-right"><div class="text-sm text-red-400 font-semibold">SELL $89,100</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
+                        </div>
+                        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div class="flex items-center gap-3"><span>🟢</span><span class="text-sm font-medium text-white">whale_0xf1...4a7d</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">SOL</span></div>
+                            <div class="text-right"><div class="text-sm text-green-400 font-semibold">BUY $215,000</div><div class="text-xs text-zinc-500">TOKEN: ████████</div></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Upgrade CTA overlay -->
+                <div class="absolute bottom-0 left-0 right-0 p-4 text-center" style="background: linear-gradient(transparent, #0a0a0f 60%);">
+                    <a href="#pricing" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-lg shadow-purple-500/20">
+                        👁️ View Full Data — Join Pro Plan
+                    </a>
+                    <p class="text-zinc-500 text-xs mt-2">See wallet addresses, token names, and real-time alerts</p>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -627,7 +721,7 @@
         <div class="mt-16 mb-12" id="launchpads">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold mb-3">
-                    NEW · <span class="bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded text-[10px] font-bold ml-1">COMING SOON</span>
+                    LIVE
                 </div>
                 <h3 class="text-2xl font-bold mb-2">🚀 Launchpad <span class="text-green-400">Scanner</span></h3>
                 <p class="text-zinc-400 max-w-xl mx-auto">Aggregate new tokens from every major launchpad. Catch them before they graduate, before the pump, before everyone else.</p>
@@ -1518,6 +1612,135 @@ print(result.summary)
 
             const launchpadSection = document.getElementById('launchpads');
             if (launchpadSection) observer.observe(launchpadSection);
+        });
+
+        // ===== COUNTER ANIMATION =====
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.dataset.target);
+                const duration = 1500;
+                const start = performance.now();
+
+                function update(now) {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // Ease out cubic
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    counter.textContent = Math.round(target * eased);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        counter.textContent = target;
+                    }
+                }
+                requestAnimationFrame(update);
+            });
+        }
+
+        // Run counters when stats section is visible
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    statsObserver.disconnect();
+                }
+            });
+        }, { threshold: 0.3 });
+
+        const statsSection = document.querySelector('.counter');
+        if (statsSection) statsObserver.observe(statsSection.closest('.grid'));
+
+        // ===== TYPEWRITER EFFECT =====
+        const scamTokens = [
+            '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
+            '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+            '0x55d398326f99059fF775485246999027B3197955',
+            'So11111111111111111111111111111111111111112',
+            'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+        ];
+        let typewriterIndex = 0;
+        let charIndex = 0;
+        let isTyping = false;
+        let typewriterTimeout;
+
+        function startTypewriter() {
+            const input = document.getElementById('tokenAddress');
+            const textEl = document.getElementById('typewriterText');
+            const cursorEl = document.getElementById('typewriterCursor');
+
+            if (!textEl || !cursorEl) return;
+            if (input.value.length > 0) {
+                textEl.textContent = '';
+                cursorEl.style.display = 'none';
+                return;
+            }
+
+            isTyping = true;
+            const currentToken = scamTokens[typewriterIndex % scamTokens.length];
+
+            function typeChar() {
+                if (input.value.length > 0) {
+                    textEl.textContent = '';
+                    cursorEl.style.display = 'none';
+                    isTyping = false;
+                    return;
+                }
+
+                if (charIndex < currentToken.length) {
+                    textEl.textContent = currentToken.substring(0, charIndex + 1);
+                    charIndex++;
+                    typewriterTimeout = setTimeout(typeChar, 30 + Math.random() * 40);
+                } else {
+                    // Pause, then clear and move to next
+                    typewriterTimeout = setTimeout(() => {
+                        if (input.value.length > 0) {
+                            textEl.textContent = '';
+                            isTyping = false;
+                            return;
+                        }
+                        // Erase
+                        function eraseChar() {
+                            if (input.value.length > 0 || charIndex <= 0) {
+                                textEl.textContent = '';
+                                charIndex = 0;
+                                typewriterIndex++;
+                                typewriterTimeout = setTimeout(startTypewriter, 500);
+                                return;
+                            }
+                            charIndex--;
+                            textEl.textContent = currentToken.substring(0, charIndex);
+                            typewriterTimeout = setTimeout(eraseChar, 20);
+                        }
+                        eraseChar();
+                    }, 2000);
+                }
+            }
+            charIndex = 0;
+            typeChar();
+        }
+
+        // Start typewriter after 2 seconds
+        setTimeout(startTypewriter, 2000);
+
+        // Stop typewriter when user focuses input
+        document.getElementById('tokenAddress')?.addEventListener('focus', () => {
+            clearTimeout(typewriterTimeout);
+            const textEl = document.getElementById('typewriterText');
+            const cursorEl = document.getElementById('typewriterCursor');
+            if (textEl) textEl.textContent = '';
+            if (cursorEl) cursorEl.style.display = 'none';
+        });
+
+        // Resume typewriter when input is empty and unfocused
+        document.getElementById('tokenAddress')?.addEventListener('blur', () => {
+            const input = document.getElementById('tokenAddress');
+            if (input && input.value.length === 0) {
+                setTimeout(startTypewriter, 1000);
+                const cursorEl = document.getElementById('typewriterCursor');
+                if (cursorEl) cursorEl.style.display = 'inline-block';
+            }
         });
     </script>
 
