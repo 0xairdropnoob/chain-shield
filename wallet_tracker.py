@@ -13,10 +13,10 @@ from typing import Optional
 # === RPC ENDPOINTS ===
 RPC_ENDPOINTS = {
     "bsc": "https://bsc-dataseed.binance.org",
-    "eth": "https://eth.llamarpc.com",
-    "base": "https://mainnet.base.org",
+    "eth": "https://rpc.eth.gateway.fm",
+    "base": "https://base.llamarpc.com",
     "arbitrum": "https://arb1.arbitrum.io/rpc",
-    "polygon": "https://polygon-rpc.com",
+    "polygon": "https://polygon-bor-rpc.publicnode.com",
     "avalanche": "https://api.avax.network/ext/bc/C/rpc",
     "fantom": "https://rpc.ftm.tools",
     "optimism": "https://mainnet.optimism.io",
