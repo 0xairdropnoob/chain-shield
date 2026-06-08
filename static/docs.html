@@ -219,6 +219,10 @@
             <a href="#webhook-signatures" class="nav-link">Signatures</a>
         </div>
         <div class="nav-group">
+            <div class="nav-label">Payment <span style="color:#22c55e;font-size:0.6rem;">NEW</span></div>
+            <a href="#payment" class="nav-link">💳 Payment & Subscriptions</a>
+        </div>
+        <div class="nav-group">
             <div class="nav-label">API Keys</div>
             <a href="#generate-key" class="nav-link">Generate Key</a>
             <a href="#validate-key" class="nav-link">Validate Key</a>
@@ -252,6 +256,7 @@
                 <p style="color: #a1a1aa; font-size: 1.05rem; line-height: 1.7; max-width: 640px;">
                     Integrate token safety scanning, smart wallet tracking, and launchpad monitoring into your trading bots, dashboards, and DeFi tools.
                     <br><span style="color:#a855f7;font-weight:600;">NEW in v0.5.0:</span> Track whale wallets (PnL + trades), scan new tokens from pump.fun, gmgn, four.meme, and DexScreener.
+                    <br><span style="color:#22c55e;font-weight:600;">NEW in v0.6.0:</span> Accept crypto payments, manage Pro subscriptions, and real-time social proof.
                 </p>
                 
                 <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
@@ -263,7 +268,7 @@
                     <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
                         <span style="font-size:1rem;">📡</span>
                         <span style="font-size:0.82rem;color:#818cf8;font-weight:600;">Version</span>
-                        <code style="font-size:0.82rem;color:#e4e4e7;">0.5.0</code>
+                        <code style="font-size:0.82rem;color:#e4e4e7;">0.6.0</code>
                     </div>
                 </div>
 
@@ -1450,6 +1455,76 @@ app.post("/webhooks/chain-sentinel", (req, res) => {
   }
 }</code></pre>
             </section>
+
+            <div class="section-divider"></div>
+
+            <!-- ===== v0.6.0 — PAYMENT & SUBSCRIPTION ENDPOINTS ===== -->
+            <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06);" id="payment">
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">💳 Payment & Subscriptions <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.7rem;padding:2px 8px;border-radius:9999px;margin-left:8px;">v0.6.0</span></h2>
+                <p style="color:#a1a1aa;font-size:0.9rem;margin-bottom:1.5rem;">Accept crypto payments and manage Pro subscriptions.</p>
+
+                <!-- POST /api/crypto/payment -->
+                <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:4px;">POST</span>
+                        <code style="color:#e4e4e7;font-size:0.9rem;">/api/crypto/payment</code>
+                    </div>
+                    <p style="color:#a1a1aa;font-size:0.85rem;margin-bottom:12px;">Submit a crypto payment for verification. No API key required.</p>
+                    <div style="margin-bottom:12px;">
+                        <p style="color:#71717a;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Request Body</p>
+                        <pre style="background:rgba(0,0,0,0.4);padding:12px;border-radius:8px;overflow-x:auto;"><code style="color:#a1a1aa;font-size:0.85rem;">{
+  "email": "user@example.com",
+  "plan": "pro",
+  "tx_hash": "0xabc123...",
+  "chain": "bsc",
+  "wallet_address": "0x4809618558bf56f9b348fcf1bcd83dbb949746eb"
+}</code></pre>
+                    </div>
+                    <div>
+                        <p style="color:#71717a;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Response</p>
+                        <pre style="background:rgba(0,0,0,0.4);padding:12px;border-radius:8px;overflow-x:auto;"><code style="color:#a1a1aa;font-size:0.85rem;">{
+  "status": "pending",
+  "message": "Payment submitted. We'll verify within 24h.",
+  "payment_id": "cp_abc123"
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- GET /api/subscription/status -->
+                <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span style="background:rgba(59,130,246,0.15);color:#3b82f6;font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:4px;">GET</span>
+                        <code style="color:#e4e4e7;font-size:0.9rem;">/api/subscription/status</code>
+                    </div>
+                    <p style="color:#a1a1aa;font-size:0.85rem;margin-bottom:12px;">Check subscription status by email or API key.</p>
+                    <div style="margin-bottom:12px;">
+                        <p style="color:#71717a;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Parameters</p>
+                        <p style="color:#a1a1aa;font-size:0.85rem;"><code>email</code> (query) or <code>X-API-Key</code> (header)</p>
+                    </div>
+                    <div>
+                        <p style="color:#71717a;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Response</p>
+                        <pre style="background:rgba(0,0,0,0.4);padding:12px;border-radius:8px;overflow-x:auto;"><code style="color:#a1a1aa;font-size:0.85rem;">{
+  "active": true,
+  "plan": "pro",
+  "expires_at": "2026-07-08T00:00:00Z",
+  "api_key": "cs_live_abc123"
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Crypto Wallets -->
+                <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.1);border-radius:12px;padding:1.25rem;">
+                    <h3 style="color:#22c55e;font-size:0.95rem;font-weight:700;margin-bottom:8px;">Accepted Payment Wallets</h3>
+                    <div style="margin-bottom:8px;">
+                        <p style="color:#71717a;font-size:0.8rem;font-weight:600;">BSC / ETH (USDT, USDC, BNB, ETH)</p>
+                        <code style="color:#e4e4e7;font-size:0.85rem;">0x4809618558bf56f9b348fcf1bcd83dbb949746eb</code>
+                    </div>
+                    <div>
+                        <p style="color:#71717a;font-size:0.8rem;font-weight:600;">Solana (USDC, SOL, SPL tokens)</p>
+                        <code style="color:#e4e4e7;font-size:0.85rem;">7FUVmXcV8rTeyq3RmkpNzwRfyiLn22ggQhpzByrdzB5q</code>
+                    </div>
+                </div>
+            </div>
 
             <div class="section-divider"></div>
 
