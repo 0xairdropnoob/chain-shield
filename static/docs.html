@@ -198,6 +198,20 @@
             <a href="#health" class="nav-link">Health Check</a>
         </div>
         <div class="nav-group">
+            <div class="nav-label">Smart Wallet <span style="color:#a855f7;font-size:0.6rem;">NEW</span></div>
+            <a href="#wallet-trades" class="nav-link">Wallet Trades</a>
+            <a href="#wallet-pnl" class="nav-link">Wallet PnL</a>
+            <a href="#wallet-summary" class="nav-link">Wallet Summary</a>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Launchpad Scanner <span style="color:#22c55e;font-size:0.6rem;">NEW</span></div>
+            <a href="#launchpad-tokens" class="nav-link">All Launchpads</a>
+            <a href="#launchpad-trending" class="nav-link">Trending</a>
+            <a href="#launchpad-pumpfun" class="nav-link">pump.fun</a>
+            <a href="#launchpad-fourmeme" class="nav-link">four.meme</a>
+            <a href="#launchpad-gmgn" class="nav-link">gmgn.ai</a>
+        </div>
+        <div class="nav-group">
             <div class="nav-label">Webhooks</div>
             <a href="#webhooks" class="nav-link">Overview</a>
             <a href="#webhook-create" class="nav-link">Create Webhook</a>
@@ -236,8 +250,8 @@
                     Chain Sentinel API
                 </h1>
                 <p style="color: #a1a1aa; font-size: 1.05rem; line-height: 1.7; max-width: 640px;">
-                    Integrate token safety scanning into your trading bots, dashboards, and DeFi tools. 
-                    Detect honeypots, rugpulls, and scams across 9 blockchains with a single API call.
+                    Integrate token safety scanning, smart wallet tracking, and launchpad monitoring into your trading bots, dashboards, and DeFi tools.
+                    <br><span style="color:#a855f7;font-weight:600;">NEW in v0.5.0:</span> Track whale wallets (PnL + trades), scan new tokens from pump.fun, gmgn, four.meme, and DexScreener.
                 </p>
                 
                 <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
@@ -249,7 +263,7 @@
                     <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
                         <span style="font-size:1rem;">📡</span>
                         <span style="font-size:0.82rem;color:#818cf8;font-weight:600;">Version</span>
-                        <code style="font-size:0.82rem;color:#e4e4e7;">0.3.0</code>
+                        <code style="font-size:0.82rem;color:#e4e4e7;">0.5.0</code>
                     </div>
                 </div>
 
@@ -330,13 +344,13 @@
                             <td><span style="color:#818cf8;font-weight:600;">Pro</span></td>
                             <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
                             <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">1,000</td>
-                            <td style="color:#818cf8;font-weight:600;">$5/mo</td>
+                            <td style="color:#818cf8;font-weight:600;">$9/mo</td>
                         </tr>
                         <tr>
                             <td><span style="color:#c084fc;font-weight:600;">Enterprise</span></td>
                             <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
                             <td style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">Unlimited</td>
-                            <td style="color:#c084fc;font-weight:600;">$25/mo</td>
+                            <td style="color:#c084fc;font-weight:600;">$29/mo</td>
                         </tr>
                     </tbody>
                 </table>
@@ -551,6 +565,271 @@
   "version": "0.3.0"
 }</code></pre>
                 </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- ===== v0.5.0 — SMART WALLET ENDPOINTS ===== -->
+
+            <div style="background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(99,102,241,0.05));border:1px solid rgba(168,85,247,0.2);border-radius:12px;padding:20px 24px;margin-bottom:32px;">
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">👛 Smart Wallet Tracking <span style="background:rgba(168,85,247,0.2);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;">v0.5.0</span></h2>
+                <p style="color:#a1a1aa;font-size:0.9rem;line-height:1.6;">Track whale wallets, analyze trades, and calculate PnL across EVM chains and Solana. Free tier: 3 trades, no PnL. Pro: unlimited trades + full PnL breakdown.</p>
+            </div>
+
+            <!-- POST /api/v1/wallet/trades -->
+            <section id="wallet-trades">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/wallet/trades</code>
+                    <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">FREE / PRO</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get recent trades for a wallet address. Scans on-chain transfer logs to detect DEX trades.
+                    <br><strong style="color:#e4e4e7;">Free:</strong> 3 recent trades, limited data. <strong style="color:#a855f7;">Pro:</strong> Unlimited trades with full details + USD values.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Request Body</h3>
+                    <table class="param-table">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">address</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-required">required</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Wallet address (0x... for EVM, base58 for Solana)</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">chains</span></td>
+                                <td><span class="param-type">string[]</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Array of chains to scan. Default: <code>["bsc", "eth"]</code>. Options: bsc, eth, base, arbitrum, polygon, avalanche, fantom, optimism, solana</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Example Request</h3>
+                    <pre><code class="language-bash">curl -X POST https://chainshieldsentinel.tech/api/v1/wallet/trades \
+  -H "Content-Type: application/json" \
+  -d '{"address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "chains": ["eth"]}'</code></pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response (Free Tier)</h3>
+                    <pre><code class="language-json">{
+  "address": "0xd8dA...6045",
+  "plan": "free",
+  "trades": [
+    {"tx_hash": "0x1234abcd...", "chain": "eth", "action": "buy", "token": "CMD", "amount": 147710.7253, "locked": true}
+  ],
+  "total_visible": 3,
+  "total_hidden": 12,
+  "upgrade_message": "Upgrade to Pro to see full trade history, PnL, and all chains."
+}</code></pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response (Pro Tier)</h3>
+                    <pre><code class="language-json">{
+  "address": "0xd8dA...6045",
+  "plan": "pro",
+  "trades": [
+    {
+      "tx_hash": "0x1234abcdef...",
+      "chain": "eth",
+      "timestamp": 1717800000,
+      "action": "buy",
+      "token_address": "0xae42f183554d369ee9...",
+      "token_symbol": "CMD",
+      "token_name": "Ten Commandments",
+      "amount": 147710.7253,
+      "amount_usd": 1234.56,
+      "price_usd": 0.008356,
+      "dex": "uniswap"
+    }
+  ],
+  "total": 15
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- POST /api/v1/wallet/pnl -->
+            <section id="wallet-pnl">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/wallet/pnl</code>
+                    <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">PRO ONLY</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Calculate profit/loss for a wallet by analyzing trade history. Returns win rate, realized PnL, and average hold time.
+                    <br><strong style="color:#ef4444;">Free:</strong> Returns null + upgrade message. <strong style="color:#a855f7;">Pro:</strong> Full PnL breakdown.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response (Pro)</h3>
+                    <pre><code class="language-json">{
+  "address": "0xd8dA...6045",
+  "plan": "pro",
+  "pnl": {
+    "total_trades": 15,
+    "winning_trades": 9,
+    "losing_trades": 6,
+    "win_rate": 60.0,
+    "total_realized_pnl": 4521.34,
+    "total_pnl": 4521.34,
+    "avg_hold_time_hours": 12.5
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- POST /api/v1/wallet/summary -->
+            <section id="wallet-summary">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/wallet/summary</code>
+                    <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">FREE / PRO</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Full wallet summary combining trades, PnL, and holdings. Free tier returns limited data with upgrade prompts.
+                </p>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- ===== v0.5.0 — LAUNCHPAD SCANNER ENDPOINTS ===== -->
+
+            <div style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(16,185,129,0.05));border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:20px 24px;margin-bottom:32px;">
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">🚀 Launchpad Scanner <span style="background:rgba(34,197,94,0.2);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;">v0.5.0</span></h2>
+                <p style="color:#a1a1aa;font-size:0.9rem;line-height:1.6;">Aggregate new tokens from pump.fun, gmgn, four.meme, and DexScreener. Free tier: 1 launchpad, 5 tokens. Pro: all launchpads, unlimited.</p>
+            </div>
+
+            <!-- POST /api/v1/launchpads/tokens -->
+            <section id="launchpad-tokens">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-post">POST</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/launchpads/tokens</code>
+                    <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">FREE / PRO</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get new tokens from multiple launchpads in one call. Specify which launchpads to query.
+                    <br><strong style="color:#e4e4e7;">Free:</strong> 5 tokens, blurred prices. <strong style="color:#22c55e;">Pro:</strong> All tokens, full data.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Request Body</h3>
+                    <table class="param-table">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">launchpads</span></td>
+                                <td><span class="param-type">string[]</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Array of launchpads. Options: <code>dexscreener</code>, <code>pump.fun</code>, <code>four.meme</code>, <code>gmgn</code>. Default: <code>["dexscreener"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">limit</span></td>
+                                <td><span class="param-type">integer</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td style="color:#a1a1aa;font-size:0.85rem;">Max tokens per launchpad. Default: 10</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Example</h3>
+                    <pre><code class="language-bash">curl -X POST https://chainshieldsentinel.tech/api/v1/launchpads/tokens \
+  -H "Content-Type: application/json" \
+  -d '{"launchpads": ["dexscreener", "pump.fun", "four.meme", "gmgn"], "limit": 5}'</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/v1/launchpads/trending -->
+            <section id="launchpad-trending">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/launchpads/trending</code>
+                    <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">FREE / PRO</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get trending/boosted tokens from DexScreener. No parameters needed.
+                    <br><strong style="color:#e4e4e7;">Free:</strong> Top 5, blurred prices. <strong style="color:#22c55e;">Pro:</strong> Full list with prices, volume, and social links.
+                </p>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/v1/launchpads/pumpfun -->
+            <section id="launchpad-pumpfun">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/launchpads/pumpfun</code>
+                    <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">PRO ONLY</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get new tokens from pump.fun (Solana). Includes bonding curve %, dev wallet, and social links.
+                    <br><strong style="color:#ef4444;">Free:</strong> Locked + upgrade message. <strong style="color:#a855f7;">Pro:</strong> Full data with bonding curve progress.
+                </p>
+
+                <div class="endpoint-card">
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;">Response (Pro)</h3>
+                    <pre><code class="language-json">{
+  "plan": "pro",
+  "launchpad": "pump.fun",
+  "tokens": [
+    {
+      "address": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+      "chain": "solana",
+      "name": "Example Token",
+      "symbol": "EXMPL",
+      "price_usd": 0.00001234,
+      "market_cap": 12340,
+      "holders": 45,
+      "created_at": 1717800000,
+      "bonding_curve_pct": 23.5,
+      "twitter": "https://x.com/example"
+    }
+  ],
+  "total": 20
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/v1/launchpads/fourmeme -->
+            <section id="launchpad-fourmeme">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/launchpads/fourmeme</code>
+                    <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">PRO ONLY</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get new tokens from four.meme (BNB Chain) via DexScreener proxy. Includes price, volume, and social links.
+                </p>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- GET /api/v1/launchpads/gmgn -->
+            <section id="launchpad-gmgn">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <span class="method-badge method-get">GET</span>
+                    <code style="font-size: 1.1rem; color: #e4e4e7; font-weight: 600;">/api/v1/launchpads/gmgn</code>
+                    <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">PRO ONLY</span>
+                </div>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Get trending Solana meme tokens (via DexScreener). Includes volume, price changes, and buy/sell counts.
+                </p>
             </section>
 
             <div class="section-divider"></div>
