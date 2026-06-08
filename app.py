@@ -8,6 +8,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from scanner import TokenScanner
+from wallet_tracker import WalletTracker
+from launchpad_scanner import LaunchpadScanner
 from pydantic import BaseModel
 from typing import Optional
 from collections import defaultdict
@@ -21,7 +23,7 @@ from api_keys import api_key_manager
 app = FastAPI(
     title="Chain Sentinel",
     description="Token Safety Scanner — Multi-chain",
-    version="0.4.0",
+    version="0.5.0",
     docs_url=None,
     redoc_url=None
 )
@@ -36,6 +38,8 @@ app.add_middleware(
 )
 
 scanner = TokenScanner()
+wallet_tracker = WalletTracker()
+launchpad_scanner = LaunchpadScanner()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -274,7 +278,7 @@ async def scan_token(req: ScanRequest, request: Request):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "chain-sentinel", "version": "0.4.0"}
+    return {"status": "ok", "service": "chain-sentinel", "version": "0.5.0"}
 
 
 
@@ -545,6 +549,307 @@ async def test_webhook(webhook_id: str, request: Request):
 async def changelog():
     with open("static/changelog.html", "r") as f:
         return HTMLResponse(content=f.read())
+
+
+
+# === v0.5.0 — SMART WALLET & LAUNCHPAD ENDPOINTS ===
+
+class WalletRequest(BaseModel):
+    address: str
+    chains: list = ["bsc", "eth"]
+
+class LaunchpadRequest(BaseModel):
+    launchpads: list = ["dexscreener"]
+    chains: list = []
+    limit: int = 10
+
+
+@app.post("/api/v1/wallet/trades")
+async def wallet_trades(req: WalletRequest, request: Request):
+    """Get recent trades for a wallet. Free: 3 trades. Pro: unlimited."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    trades = await wallet_tracker.get_wallet_trades(req.address, req.chains, limit=50)
+
+    if not is_pro:
+        # Free: only 3 trades, limited data
+        return {
+            "address": req.address,
+            "plan": "free",
+            "trades": [{
+                "tx_hash": t.tx_hash[:10] + "...",
+                "chain": t.chain,
+                "action": t.action,
+                "token": t.token_symbol,
+                "amount": round(t.amount, 4),
+                "locked": True,
+            } for t in trades[:3]],
+            "total_visible": 3,
+            "total_hidden": max(0, len(trades) - 3),
+            "upgrade_message": "Upgrade to Pro to see full trade history, PnL, and all chains."
+        }
+
+    # Pro: full data
+    return {
+        "address": req.address,
+        "plan": "pro",
+        "trades": [{
+            "tx_hash": t.tx_hash,
+            "chain": t.chain,
+            "timestamp": t.timestamp,
+            "action": t.action,
+            "token_address": t.token_address,
+            "token_symbol": t.token_symbol,
+            "token_name": t.token_name,
+            "amount": round(t.amount, 6),
+            "amount_usd": round(t.amount_usd, 2),
+            "price_usd": round(t.price_usd, 8),
+            "dex": t.dex,
+        } for t in trades],
+        "total": len(trades),
+    }
+
+
+@app.post("/api/v1/wallet/pnl")
+async def wallet_pnl(req: WalletRequest, request: Request):
+    """Get PnL for a wallet. Pro only."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    if not is_pro:
+        return {
+            "address": req.address,
+            "plan": "free",
+            "pnl": None,
+            "upgrade_message": "PnL breakdown is a Pro feature. Upgrade to see win rate, realized PnL, and trade analysis."
+        }
+
+    pnl = await wallet_tracker.calculate_pnl(req.address, req.chains)
+
+    return {
+        "address": req.address,
+        "plan": "pro",
+        "pnl": {
+            "total_trades": pnl.total_trades,
+            "winning_trades": pnl.winning_trades,
+            "losing_trades": pnl.losing_trades,
+            "win_rate": pnl.win_rate,
+            "total_realized_pnl": pnl.total_realized_pnl,
+            "total_pnl": pnl.total_pnl,
+            "avg_hold_time_hours": pnl.avg_hold_time_hours,
+        }
+    }
+
+
+@app.post("/api/v1/wallet/summary")
+async def wallet_summary(req: WalletRequest, request: Request):
+    """Get full wallet summary. Free: limited. Pro: full."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    result = await wallet_tracker.get_wallet_summary(req.address, req.chains, is_pro=is_pro)
+    return result
+
+
+@app.post("/api/v1/launchpads/tokens")
+async def launchpad_tokens(req: LaunchpadRequest, request: Request):
+    """Get new tokens from launchpads. Free: 1 launchpad, 5 tokens. Pro: all, unlimited."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    result = await launchpad_scanner.get_all_launchpad_tokens(
+        launchpads=req.launchpads,
+        chains=req.chains,
+        limit_per_source=req.limit,
+        is_pro=is_pro,
+    )
+    return result
+
+
+@app.get("/api/v1/launchpads/trending")
+async def launchpad_trending(request: Request):
+    """Get trending tokens across all launchpads. Free: top 5. Pro: full list."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    # Get boosted tokens (trending)
+    boosted = await launchpad_scanner.get_dexscreener_boosted(limit=20)
+
+    tokens = []
+    for t in boosted:
+        if is_pro:
+            tokens.append({
+                "address": t.address,
+                "chain": t.chain,
+                "launchpad": t.launchpad,
+                "name": t.name,
+                "symbol": t.symbol,
+                "price_usd": round(t.price_usd, 8),
+                "market_cap": round(t.market_cap, 2),
+                "volume_24h": round(t.volume_24h, 2),
+                "volume_1h": round(t.volume_1h, 2),
+                "liquidity_usd": round(t.liquidity_usd, 2),
+                "price_change_1h": t.price_change_1h,
+                "price_change_24h": t.price_change_24h,
+                "buy_count_24h": t.buy_count_24h,
+                "sell_count_24h": t.sell_count_24h,
+                "dex": t.dex,
+            })
+        else:
+            tokens.append({
+                "address": t.address[:8] + "...",
+                "chain": t.chain,
+                "name": t.name,
+                "symbol": t.symbol,
+                "price_usd": "***",
+                "market_cap": "***",
+                "locked": True,
+            })
+
+    return {
+        "plan": "pro" if is_pro else "free",
+        "tokens": tokens if is_pro else tokens[:5],
+        "total": len(boosted),
+        "upgrade_message": None if is_pro else "Upgrade to Pro to see prices, volume, and all trending tokens."
+    }
+
+
+@app.get("/api/v1/launchpads/pumpfun")
+async def launchpad_pumpfun(request: Request):
+    """Get new tokens from pump.fun. Pro only."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    if not is_pro:
+        return {
+            "plan": "free",
+            "launchpad": "pump.fun",
+            "tokens": [],
+            "upgrade_message": "pump.fun data is a Pro feature. Upgrade to see new tokens, bonding curve %, and early buyer data."
+        }
+
+    tokens = await launchpad_scanner.get_pumpfun_tokens(limit=20)
+    return {
+        "plan": "pro",
+        "launchpad": "pump.fun",
+        "tokens": [{
+            "address": t.address,
+            "chain": "solana",
+            "name": t.name,
+            "symbol": t.symbol,
+            "price_usd": round(t.price_usd, 8),
+            "market_cap": round(t.market_cap, 2),
+            "holders": t.holders,
+            "created_at": t.created_at,
+            "bonding_curve_pct": t.bonding_curve_pct,
+            "website": t.website,
+            "twitter": t.twitter,
+        } for t in tokens],
+        "total": len(tokens),
+    }
+
+
+@app.get("/api/v1/launchpads/fourmeme")
+async def launchpad_fourmeme(request: Request):
+    """Get new tokens from four.meme. Pro only."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    if not is_pro:
+        return {
+            "plan": "free",
+            "launchpad": "four.meme",
+            "tokens": [],
+            "upgrade_message": "four.meme data is a Pro feature. Upgrade to see new BNB Chain launches."
+        }
+
+    tokens = await launchpad_scanner.get_fourmeme_tokens(limit=20)
+    return {
+        "plan": "pro",
+        "launchpad": "four.meme",
+        "tokens": [{
+            "address": t.address,
+            "chain": "bsc",
+            "name": t.name,
+            "symbol": t.symbol,
+            "price_usd": round(t.price_usd, 8),
+            "market_cap": round(t.market_cap, 2),
+            "holders": t.holders,
+            "created_at": t.created_at,
+            "website": t.website,
+            "twitter": t.twitter,
+        } for t in tokens],
+        "total": len(tokens),
+    }
+
+
+@app.get("/api/v1/launchpads/gmgn")
+async def launchpad_gmgn(request: Request):
+    """Get trending tokens from gmgn.ai. Pro only."""
+    api_key = request.headers.get("X-API-Key")
+    is_pro = False
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info and key_info.get("plan") in ("pro", "enterprise"):
+            is_pro = True
+
+    if not is_pro:
+        return {
+            "plan": "free",
+            "launchpad": "gmgn",
+            "tokens": [],
+            "upgrade_message": "gmgn.ai data is a Pro feature. Upgrade to see smart money flows."
+        }
+
+    tokens = await launchpad_scanner.get_gmgn_trending(limit=20)
+    return {
+        "plan": "pro",
+        "launchpad": "gmgn",
+        "tokens": [{
+            "address": t.address,
+            "chain": "solana",
+            "name": t.name,
+            "symbol": t.symbol,
+            "price_usd": round(t.price_usd, 8),
+            "market_cap": round(t.market_cap, 2),
+            "volume_1h": round(t.volume_1h, 2),
+            "holders": t.holders,
+            "price_change_1h": t.price_change_1h,
+            "buy_count_24h": t.buy_count_24h,
+            "sell_count_24h": t.sell_count_24h,
+            "top_10_hold_pct": t.top_10_hold_pct,
+        } for t in tokens],
+        "total": len(tokens),
+    }
 
 
 @app.post("/api/contact")
