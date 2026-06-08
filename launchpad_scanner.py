@@ -64,7 +64,10 @@ class LaunchpadScanner:
         if self.session is None or self.session.closed:
             self.session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=15),
-                headers={"User-Agent": "ChainSentinel/0.5.0"}
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                    "Accept": "application/json",
+                }
             )
         return self.session
 
@@ -260,78 +263,110 @@ class LaunchpadScanner:
 
         return tokens
 
-    # === GMGN (Solana) ===
+    # === GMGN (Solana) via DexScreener fallback ===
 
     async def get_gmgn_trending(self, limit: int = 20) -> list:
-        """Get trending tokens from gmgn.ai."""
+        """Get trending Solana tokens (gmgn.ai has Cloudflare, using DexScreener fallback)."""
         session = await self._get_session()
         tokens = []
 
         try:
+            # gmgn.ai has Cloudflare protection, use DexScreener for Solana trending
             async with session.get(
-                "https://gmgn.ai/defi/quotation/v1/rank/sol/swaps/1h?limit=50&orderby=swaps&direction=desc"
+                "https://api.dexscreener.com/latest/dex/search?q=solana%20meme"
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    rank = data.get("data", {}).get("rank", [])
+                    pairs = data.get("pairs", [])
 
-                    for item in rank[:limit]:
+                    # Filter Solana pairs only, sort by volume
+                    sol_pairs = [p for p in pairs if p.get("chainId") == "solana"]
+                    sol_pairs.sort(key=lambda p: float(p.get("volume", {}).get("h24", 0) or 0), reverse=True)
+
+                    seen = set()
+                    for pair in sol_pairs[:limit * 2]:
+                        base = pair.get("baseToken", {})
+                        addr = base.get("address", "")
+                        if addr in seen:
+                            continue
+                        seen.add(addr)
+
                         tokens.append(LaunchpadToken(
-                            address=item.get("address", ""),
+                            address=addr,
                             chain="solana",
                             launchpad="gmgn",
-                            name=item.get("name", "Unknown"),
-                            symbol=item.get("symbol", "???"),
-                            price_usd=float(item.get("price", 0) or 0),
-                            market_cap=float(item.get("marketcap", 0) or 0),
-                            volume_1h=float(item.get("volume", 0) or 0),
-                            volume_24h=float(item.get("volume_24h", 0) or 0),
-                            holders=int(item.get("holder_count", 0) or 0),
-                            price_change_1h=float(item.get("price_change_percent", 0) or 0),
-                            buy_count_24h=int(item.get("buy_count", 0) or 0),
-                            sell_count_24h=int(item.get("sell_count", 0) or 0),
-                            top_10_hold_pct=float(item.get("top_10_holder_rate", 0) or 0),
+                            name=base.get("name", "Unknown"),
+                            symbol=base.get("symbol", "???"),
+                            price_usd=float(pair.get("priceUsd", 0) or 0),
+                            market_cap=float(pair.get("marketCap", 0) or 0),
+                            volume_24h=float(pair.get("volume", {}).get("h24", 0) or 0),
+                            volume_1h=float(pair.get("volume", {}).get("h1", 0) or 0),
+                            liquidity_usd=float(pair.get("liquidity", {}).get("usd", 0) or 0),
+                            holders=int(pair.get("info", {}).get("holders", 0) or 0) if pair.get("info") else 0,
+                            pair_address=pair.get("pairAddress", ""),
+                            dex=pair.get("dexId", ""),
+                            price_change_1h=float(pair.get("priceChange", {}).get("h1", 0) or 0),
+                            price_change_24h=float(pair.get("priceChange", {}).get("h24", 0) or 0),
+                            buy_count_24h=int(pair.get("txns", {}).get("h24", {}).get("buys", 0) or 0),
+                            sell_count_24h=int(pair.get("txns", {}).get("h24", {}).get("sells", 0) or 0),
                         ))
+
+                        if len(tokens) >= limit:
+                            break
                 else:
-                    print(f"GMGN API returned {resp.status}")
+                    print(f"DexScreener Solana search returned {resp.status}")
         except Exception as e:
-            print(f"GMGN error: {e}")
+            print(f"GMGN fallback error: {e}")
 
         return tokens
 
-    # === Four.meme (BNB Chain) ===
+    # === Four.meme (BNB Chain) via DexScreener ===
 
     async def get_fourmeme_tokens(self, limit: int = 20) -> list:
-        """Get new tokens from four.meme."""
+        """Get new tokens from four.meme via DexScreener (four.meme API changed)."""
         session = await self._get_session()
         tokens = []
 
         try:
+            # Use DexScreener to find four.meme tokens on BNB chain
             async with session.get(
-                "https://four.meme/meme-api/v1/private/token/query?sort=created&order=desc&size=50&onLine=true"
+                "https://api.dexscreener.com/latest/dex/search?q=four.meme"
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    items = data.get("data", {}).get("records", [])
+                    pairs = data.get("pairs", [])
 
-                    for item in items[:limit]:
+                    seen = set()
+                    for pair in pairs[:limit * 2]:
+                        base = pair.get("baseToken", {})
+                        addr = base.get("address", "")
+                        if addr in seen:
+                            continue
+                        seen.add(addr)
+
                         tokens.append(LaunchpadToken(
-                            address=item.get("address", ""),
-                            chain="bsc",
+                            address=addr,
+                            chain=pair.get("chainId", "bsc"),
                             launchpad="four.meme",
-                            name=item.get("name", "Unknown"),
-                            symbol=item.get("symbol", "???"),
-                            price_usd=float(item.get("price", 0) or 0),
-                            market_cap=float(item.get("marketCap", 0) or 0),
-                            volume_24h=float(item.get("volume24h", 0) or 0),
-                            holders=int(item.get("holderCount", 0) or 0),
-                            created_at=int(item.get("createTime", 0) or 0),
-                            website=item.get("website", ""),
-                            twitter=item.get("twitter", ""),
-                            telegram=item.get("telegram", ""),
+                            name=base.get("name", "Unknown"),
+                            symbol=base.get("symbol", "???"),
+                            price_usd=float(pair.get("priceUsd", 0) or 0),
+                            market_cap=float(pair.get("marketCap", 0) or 0),
+                            volume_24h=float(pair.get("volume", {}).get("h24", 0) or 0),
+                            volume_1h=float(pair.get("volume", {}).get("h1", 0) or 0),
+                            liquidity_usd=float(pair.get("liquidity", {}).get("usd", 0) or 0),
+                            pair_address=pair.get("pairAddress", ""),
+                            dex=pair.get("dexId", ""),
+                            price_change_1h=float(pair.get("priceChange", {}).get("h1", 0) or 0),
+                            price_change_24h=float(pair.get("priceChange", {}).get("h24", 0) or 0),
+                            buy_count_24h=int(pair.get("txns", {}).get("h24", {}).get("buys", 0) or 0),
+                            sell_count_24h=int(pair.get("txns", {}).get("h24", {}).get("sells", 0) or 0),
                         ))
+
+                        if len(tokens) >= limit:
+                            break
                 else:
-                    print(f"Four.meme API returned {resp.status}")
+                    print(f"DexScreener four.meme search returned {resp.status}")
         except Exception as e:
             print(f"Four.meme error: {e}")
 
