@@ -69,15 +69,18 @@ TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523
 # DexScreener API (free, no key)
 DEXSCREENER_API = "https://api.dexscreener.com/latest/dex"
 
-# Etherscan-compatible APIs (free tier, no key — 5 req/sec)
-EXPLORER_API = {
-    "bsc": "https://api.bscscan.com/api",
-    "eth": "https://api.etherscan.io/api",
-    "base": "https://api.basescan.org/api",
-    "arbitrum": "https://api.arbiscan.io/api",
-    "polygon": "https://api.polygonscan.com/api",
-    "avalanche": "https://api.snowtrace.io/api",
-    "optimism": "https://api-optimistic.etherscan.io/api",
+# Etherscan V2 API (unified endpoint, supports multiple chains)
+ETHERSCAN_V2_API = "https://api.etherscan.io/v2/api"
+
+# Chain IDs for Etherscan V2
+CHAIN_IDS = {
+    "eth": 1,
+    "bsc": 56,
+    "polygon": 137,
+    "arbitrum": 42161,
+    "base": 8453,
+    "optimism": 10,
+    "avalanche": 43114,
 }
 
 
@@ -274,25 +277,32 @@ class WalletTracker:
         return all_trades[:limit]
 
     async def _get_explorer_trades(self, chain: str, address: str, limit: int = 20) -> list:
-        """Get trades using Etherscan-compatible API (free, no key)."""
-        api_url = EXPLORER_API.get(chain)
-        if not api_url:
+        """Get trades using Etherscan V2 API (needs API key)."""
+        from explorer_keys import get_explorer_key, has_explorer_key
+        
+        if not has_explorer_key(chain):
             return []
-
+        
+        chain_id = CHAIN_IDS.get(chain)
+        if not chain_id:
+            return []
+        
+        api_key = get_explorer_key(chain)
         session = await self._get_session()
         trades = []
 
         try:
-            # Get ERC-20 token transfers
             params = {
+                "chainid": chain_id,
                 "module": "account",
                 "action": "tokentx",
                 "address": address,
                 "page": 1,
-                "offset": min(limit * 2, 50),  # fetch extra for filtering
+                "offset": min(limit * 2, 50),
                 "sort": "desc",
+                "apikey": api_key,
             }
-            async with session.get(api_url, params=params) as resp:
+            async with session.get(ETHERSCAN_V2_API, params=params) as resp:
                 data = await resp.json()
 
             if data.get("status") != "1" or not data.get("result"):
