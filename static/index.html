@@ -1034,10 +1034,14 @@
 
             <!-- Crypto Payment Option -->
             <div class="mt-8 text-center">
-                <p class="text-zinc-500 text-sm mb-3">Prefer crypto? Pay with USDT/BNB/ETH directly.</p>
-                <button onclick="openCryptoModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-green-500/30 hover:text-green-400 transition-all font-semibold text-sm">
-                    ₿ Pay with Crypto
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold mb-3">
+                    ₿ RECOMMENDED — No KYC, Instant
+                </div>
+                <p class="text-zinc-400 text-sm mb-3">Pay with USDT, BNB, or ETH directly. No account needed.</p>
+                <button onclick="openCryptoModal()" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all font-bold text-sm shadow-lg shadow-green-500/20">
+                    ₿ Pay with Crypto — $9/mo
                 </button>
+                <p class="text-zinc-600 text-xs mt-2">Card payments coming soon via LemonSqueezy</p>
             </div>
 
             <!-- Crypto Payment Modal -->
@@ -1065,8 +1069,8 @@
                         <div class="mb-4">
                             <label class="text-sm text-zinc-400 block mb-1">Send to this address (BSC/ETH — USDT)</label>
                             <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                                <code class="text-sm text-green-400 flex-1 break-all">0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643</code>
-                                <button onclick="copyToClipboard('0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643')" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
+                                <code class="text-sm text-green-400 flex-1 break-all">0x4809618558bf56f9b348fcf1bcd83dbb949746eb</code>
+                                <button onclick="copyToClipboard('0x4809618558bf56f9b348fcf1bcd83dbb949746eb')" class="text-zinc-500 hover:text-white text-sm px-2">📋</button>
                             </div>
                         </div>
 
@@ -1103,28 +1107,28 @@
             <div id="checkoutSetupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8);">
                 <div class="result-card rounded-2xl p-8 max-w-md w-full relative text-center">
                     <button onclick="document.getElementById('checkoutSetupModal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-xl">✕</button>
-                    <div class="text-4xl mb-4">🚀</div>
-                    <h3 class="text-xl font-bold mb-2">Coming Very Soon!</h3>
-                    <p class="text-zinc-400 text-sm mb-4">We're setting up payment processing. In the meantime:</p>
-                    <div class="space-y-3 text-left">
-                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                            <span class="text-lg">📧</span>
-                            <div>
-                                <p class="text-sm font-semibold">Email us directly</p>
-                                <a href="mailto:info@chainshieldsentinel.tech" class="text-indigo-400 text-xs">info@chainshieldsentinel.tech</a>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                            <span class="text-lg">₿</span>
-                            <div>
-                                <p class="text-sm font-semibold">Pay with crypto</p>
-                                <p class="text-zinc-500 text-xs">USDT/BNB/ETH accepted</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="document.getElementById('checkoutSetupModal').classList.add('hidden'); openCryptoModal()" class="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 font-semibold text-sm">
-                        Pay with Crypto Now
-                    </button>
+        <div class="text-4xl mb-4">🚀</div>
+        <h3 class="text-xl font-bold mb-2">Get Pro Access</h3>
+        <p class="text-zinc-400 text-sm mb-4">Card payments are coming soon. For now, pay with crypto:</p>
+        <div class="space-y-3 text-left mb-4">
+            <div class="flex items-center gap-3 p-3 bg-green-500/5 border border-green-500/10 rounded-xl">
+                <span class="text-lg">₿</span>
+                <div>
+                    <p class="text-sm font-semibold text-green-400">Pay with Crypto (Recommended)</p>
+                    <p class="text-zinc-500 text-xs">USDT/BNB/ETH — No KYC, direct payment</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                <span class="text-lg">📧</span>
+                <div>
+                    <p class="text-sm font-semibold">Email us directly</p>
+                    <a href="mailto:info@chainshieldsentinel.tech" class="text-indigo-400 text-xs">info@chainshieldsentinel.tech</a>
+                </div>
+            </div>
+        </div>
+        <button onclick="document.getElementById('checkoutSetupModal').classList.add('hidden'); openCryptoModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 font-semibold text-sm">
+            ₿ Pay with Crypto Now
+        </button>
                 </div>
             </div>
         </div>
@@ -2013,7 +2017,7 @@ print(result.summary)
                         plan: plan,
                         tx_hash: txHash,
                         chain: 'bsc',
-                        wallet_address: '0xe36f80F67D3227e96D9D8757d2bF0Ff193CFD643'
+                        wallet_address: '0x4809618558bf56f9b348fcf1bcd83dbb949746eb'
                     })
                 });
 
