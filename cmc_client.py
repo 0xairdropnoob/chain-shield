@@ -238,12 +238,15 @@ class CMCClient:
         return data.get("data", [])
 
     async def get_trending_latest(self, limit: int = 20) -> list:
-        """Get trending cryptocurrencies."""
+        """Get trending cryptocurrencies (free tier: uses volume_24h percent change as proxy)."""
         if not self.enabled:
             return []
 
-        data = await self._get("/v1/cryptocurrency/trending/latest", {
-            "limit": str(limit),
+        data = await self._get("/v1/cryptocurrency/listings/latest", {
+            "start": "1",
+            "limit": str(min(limit, 100)),
+            "sort": "volume_24h",
+            "sort_dir": "desc",
             "convert": "USD",
         })
 
@@ -253,12 +256,14 @@ class CMCClient:
         return data.get("data", [])
 
     async def get_trending_gainers_losers(self, limit: int = 20, sort_dir: str = "desc") -> list:
-        """Get top gainers or losers. sort_dir='desc' for gainers, 'asc' for losers."""
+        """Get top gainers or losers via listings/latest with sort (free tier compatible)."""
         if not self.enabled:
             return []
 
-        data = await self._get("/v1/cryptocurrency/trending/gainers-losers", {
-            "limit": str(limit),
+        data = await self._get("/v1/cryptocurrency/listings/latest", {
+            "start": "1",
+            "limit": str(min(limit, 100)),
+            "sort": "percent_change_24h",
             "sort_dir": sort_dir,
             "convert": "USD",
         })
@@ -310,12 +315,15 @@ class CMCClient:
         )
 
     async def get_new_listings(self, limit: int = 20) -> list:
-        """Get newly listed cryptocurrencies."""
+        """Get newly listed cryptocurrencies (free tier: uses listings sorted by date_added)."""
         if not self.enabled:
             return []
 
-        data = await self._get("/v1/cryptocurrency/listings/new", {
-            "limit": str(limit),
+        data = await self._get("/v1/cryptocurrency/listings/latest", {
+            "start": "1",
+            "limit": str(min(limit, 100)),
+            "sort": "date_added",
+            "sort_dir": "desc",
             "convert": "USD",
         })
 
