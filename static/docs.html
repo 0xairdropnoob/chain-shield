@@ -212,6 +212,14 @@
             <a href="#launchpad-gmgn" class="nav-link">gmgn.ai</a>
         </div>
         <div class="nav-group">
+            <div class="nav-label">Market Data <span style="color:#f59e0b;font-size:0.6rem;">NEW</span></div>
+            <a href="#market-overview" class="nav-link">Global Overview</a>
+            <a href="#market-trending" class="nav-link">Trending</a>
+            <a href="#market-gainers" class="nav-link">Gainers & Losers</a>
+            <a href="#market-top" class="nav-link">Top by Market Cap</a>
+            <a href="#market-search" class="nav-link">Search Tokens</a>
+        </div>
+        <div class="nav-group">
             <div class="nav-label">Webhooks</div>
             <a href="#webhooks" class="nav-link">Overview</a>
             <a href="#webhook-create" class="nav-link">Create Webhook</a>
@@ -1214,6 +1222,107 @@ if check["safe"]:
     # execute_buy(token_address)
 else:
     print(f"❌ Skipping: {check['reason']}")</code></pre>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+            <div class="section-divider"></div>
+            <!-- Market Data (CoinMarketCap) -->
+            <section id="market-overview">
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">📊 Market Data <span style="color:#f59e0b;font-size:0.7rem;background:rgba(245,158,11,0.15);padding:2px 8px;border-radius:4px;">CoinMarketCap</span></h2>
+                <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.7; margin-bottom: 20px;">
+                    Real-time market data powered by CoinMarketCap. Get global metrics, trending tokens, gainers/losers, and search any cryptocurrency.
+                    Requires a CMC API key (free tier: 10,000 credits/month).
+                </p>
+
+                <div style="padding: 14px 18px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; margin-bottom: 24px;">
+                    <span style="font-size: 0.85rem; color: #f59e0b; font-weight: 600;">🔑 Requires CMC_API_KEY in environment</span>
+                    <span style="font-size: 0.8rem; color: #a1a1aa;"> — <a href="https://pro.coinmarketcap.com/signup" style="color:#818cf8;" target="_blank">Get free key →</a></span>
+                </div>
+
+                <div class="endpoint-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/status</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Check if CMC API is configured and working.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/status</code></pre>
+                </div>
+
+                <div class="endpoint-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/overview</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Global crypto market metrics: total market cap, BTC/ETH dominance, active cryptocurrencies.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/overview</code></pre>
+                    <div style="margin-top: 12px;">
+                        <p style="font-size: 0.8rem; color: #71717a; margin-bottom: 6px;">Response fields:</p>
+                        <table class="param-table" style="font-size: 0.82rem;">
+                            <tr><td><code>total_market_cap</code></td><td>Total crypto market cap in USD</td></tr>
+                            <tr><td><code>total_volume_24h</code></td><td>24h trading volume</td></tr>
+                            <tr><td><code>btc_dominance</code></td><td>Bitcoin dominance %</td></tr>
+                            <tr><td><code>eth_dominance</code></td><td>Ethereum dominance %</td></tr>
+                            <tr><td><code>active_cryptocurrencies</code></td><td>Number of active cryptos</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="endpoint-card" id="market-trending" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/trending</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Get trending cryptocurrencies on CoinMarketCap.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/trending?limit=10</code></pre>
+                    <p style="font-size: 0.8rem; color: #71717a; margin-top: 8px;">Query: <code>limit</code> (1-50, default 20)</p>
+                </div>
+
+                <div class="endpoint-card" id="market-gainers" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/gainers</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Top price gainers in the last 24 hours.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/gainers?limit=10</code></pre>
+                </div>
+
+                <div class="endpoint-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/losers</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Top price losers in the last 24 hours.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/losers?limit=10</code></pre>
+                </div>
+
+                <div class="endpoint-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/new-listings</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Newly listed cryptocurrencies on CoinMarketCap.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/new-listings?limit=10</code></pre>
+                </div>
+
+                <div class="endpoint-card" id="market-top" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/top</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Top cryptocurrencies ranked by market cap.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/top?start=1&limit=20&sort=market_cap</code></pre>
+                    <p style="font-size: 0.8rem; color: #71717a; margin-top: 8px;">Query: <code>start</code> (offset), <code>limit</code> (1-100), <code>sort</code> (market_cap, volume_24h, percent_change_24h)</p>
+                </div>
+
+                <div class="endpoint-card" id="market-search" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">GET</span>
+                        <code style="font-size: 0.9rem; color: #e4e4e7;">/api/market/search?q=bitcoin</code>
+                    </div>
+                    <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 12px;">Search tokens by name or symbol on CoinMarketCap.</p>
+                    <pre><code class="language-bash">curl https://chainshieldsentinel.tech/api/market/search?q=bitcoin</code></pre>
+                    <p style="font-size: 0.8rem; color: #71717a; margin-top: 8px;">Query: <code>q</code> (min 2 characters)</p>
                 </div>
             </section>
 
