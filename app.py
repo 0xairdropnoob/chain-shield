@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from scanner import TokenScanner
 from wallet_tracker import WalletTracker
 from launchpad_scanner import LaunchpadScanner
+from cmc_client import cmc_client
 from pydantic import BaseModel
 from typing import Optional
 from collections import defaultdict
@@ -110,7 +111,7 @@ user_manager = UserManager()
 app = FastAPI(
     title="Chain Sentinel",
     description="Token Safety Scanner — Multi-chain",
-    version="0.6.0",
+    version="0.7.0",
     docs_url=None,
     redoc_url=None
 )
@@ -365,7 +366,12 @@ async def scan_token(req: ScanRequest, request: Request):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "chain-sentinel", "version": "0.6.0"}
+    return {
+        "status": "ok",
+        "service": "chain-sentinel",
+        "version": "0.7.0",
+        "cmc_enabled": cmc_client.enabled,
+    }
 
 
 
@@ -1447,6 +1453,104 @@ async def auth_upgrade(req: UpgradeRequest, request: Request):
     return {
         "status": "pending",
         "message": "Payment submitted. Pro access will be activated within 24h.",
+    }
+
+
+# === COINMARKETCAP ENDPOINTS ===
+@app.get("/api/market/overview")
+async def market_overview():
+    """Global crypto market metrics from CoinMarketCap."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    
+    metrics = await cmc_client.get_global_metrics()
+    if not metrics:
+        return {"error": "Failed to fetch global metrics"}
+    
+    return {
+        "enabled": True,
+        "total_market_cap": metrics.total_market_cap,
+        "total_volume_24h": metrics.total_volume_24h,
+        "btc_dominance": metrics.btc_dominance,
+        "eth_dominance": metrics.eth_dominance,
+        "active_cryptocurrencies": metrics.active_cryptocurrencies,
+        "active_exchanges": metrics.active_exchanges,
+        "last_updated": metrics.last_updated,
+    }
+
+
+@app.get("/api/market/trending")
+async def market_trending(limit: int = 20):
+    """Get trending cryptocurrencies from CMC."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    
+    data = await cmc_client.get_trending_latest(limit=min(limit, 50))
+    return {"enabled": True, "data": data, "count": len(data)}
+
+
+@app.get("/api/market/gainers")
+async def market_gainers(limit: int = 20):
+    """Get top gainers (24h) from CMC."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    
+    data = await cmc_client.get_trending_gainers_losers(limit=min(limit, 50), sort_dir="desc")
+    return {"enabled": True, "data": data, "count": len(data)}
+
+
+@app.get("/api/market/losers")
+async def market_losers(limit: int = 20):
+    """Get top losers (24h) from CMC."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    
+    data = await cmc_client.get_trending_gainers_losers(limit=min(limit, 50), sort_dir="asc")
+    return {"enabled": True, "data": data, "count": len(data)}
+
+
+@app.get("/api/market/new-listings")
+async def market_new_listings(limit: int = 20):
+    """Get newly listed cryptocurrencies from CMC."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    
+    data = await cmc_client.get_new_listings(limit=min(limit, 50))
+    return {"enabled": True, "data": data, "count": len(data)}
+
+
+@app.get("/api/market/top")
+async def market_top(start: int = 1, limit: int = 100, sort: str = "market_cap"):
+    """Get top cryptocurrencies by market cap from CMC."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    
+    data = await cmc_client.get_listings_latest(
+        start=max(1, start),
+        limit=min(limit, 100),
+        sort=sort,
+    )
+    return {"enabled": True, "data": data, "count": len(data)}
+
+
+@app.get("/api/market/search")
+async def market_search(q: str = ""):
+    """Search tokens on CoinMarketCap."""
+    if not cmc_client.enabled:
+        return {"error": "CMC API not configured", "enabled": False}
+    if not q or len(q) < 2:
+        return {"error": "Query must be at least 2 characters"}
+    
+    data = await cmc_client.search_tokens(q)
+    return {"enabled": True, "data": data, "count": len(data)}
+
+
+@app.get("/api/market/status")
+async def market_status():
+    """Check if CMC API is configured and working."""
+    return {
+        "enabled": cmc_client.enabled,
+        "api_key_set": bool(cmc_client.api_key),
     }
 
 

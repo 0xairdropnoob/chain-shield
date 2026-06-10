@@ -6,6 +6,7 @@ Scans tokens across BSC, Ethereum, Base, Arbitrum, Polygon for rugpull/honeypot 
 import httpx
 import asyncio
 import os
+from cmc_client import cmc_client
 from typing import Optional
 from dataclasses import dataclass, field
 
@@ -225,11 +226,19 @@ class TokenScanner:
         goplus_task = self._check_goplus(address, chain)
         dex_task = self._check_dexscreener(address, chain)
         gecko_task = self._check_geckoterminal(address, chain)
+        cmc_task = cmc_client.enrich_token(address, chain)
         
         goplus_data, dex_data, gecko_data = await asyncio.gather(
             goplus_task, dex_task, gecko_task,
             return_exceptions=True
         )
+
+        # CMC runs separately (optional enrichment, not blocking)
+        cmc_data = None
+        try:
+            cmc_data = await cmc_task
+        except Exception:
+            pass
         
         # Track data sources
         has_goplus = False
@@ -253,6 +262,11 @@ class TokenScanner:
             self._process_geckoterminal(report, gecko_data)
             has_gecko = True
             report.data_sources.append("GeckoTerminal")
+
+        # Process CMC enrichment data (optional, enhances existing data)
+        if cmc_data and not isinstance(cmc_data, Exception):
+            self._process_cmc(report, cmc_data)
+            report.data_sources.append("CoinMarketCap")
         
         # Check if we have enough data
         if not has_goplus and not has_dex:
@@ -496,6 +510,42 @@ class TokenScanner:
             liq = attrs.get("liquidity_usd", {})
             if liq:
                 report.positives.append(f"💧 Liquidity: ${float(liq or 0):,.0f}")
+
+    def _process_cmc(self, report: TokenReport, cmc_data):
+        """Enrich report with CoinMarketCap data."""
+        from cmc_client import CMCTokenData
+
+        if not isinstance(cmc_data, CMCTokenData):
+            return
+
+        # Enrich name/symbol if missing
+        if not report.name and cmc_data.name:
+            report.name = cmc_data.name
+        if not report.symbol and cmc_data.symbol:
+            report.symbol = cmc_data.symbol
+
+        # Store CMC metadata in raw_data
+        report.raw_data["cmc"] = {
+            "id": cmc_data.cmc_id,
+            "rank": cmc_data.cmc_rank,
+            "slug": cmc_data.slug,
+            "logo": cmc_data.logo,
+            "description": cmc_data.description[:200] if cmc_data.description else "",
+            "website": cmc_data.website,
+            "twitter": cmc_data.twitter,
+            "explorer": cmc_data.explorer,
+            "tags": cmc_data.tags,
+            "percent_change_1h": cmc_data.percent_change_1h,
+            "percent_change_24h": cmc_data.percent_change_24h,
+            "percent_change_7d": cmc_data.percent_change_7d,
+            "percent_change_30d": cmc_data.percent_change_30d,
+        }
+
+        # CMC rank as a positive signal
+        if cmc_data.cmc_rank and cmc_data.cmc_rank <= 100:
+            report.positives.append(f"🏆 CMC Rank #{cmc_data.cmc_rank} — Top 100 token")
+        elif cmc_data.cmc_rank and cmc_data.cmc_rank <= 500:
+            report.positives.append(f"📊 CMC Rank #{cmc_data.cmc_rank}")
     
     def _compute_score(self, report: TokenReport):
         """Compute safety score 0-100. Higher = safer."""
