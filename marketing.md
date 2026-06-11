@@ -65,7 +65,7 @@ Start free, upgrade when you need more.
 **Tweet 6:**
 Built by @ChainShieldSn
 
-Open source: github.com/0xairdropnoob/chain-shield
+Open source: github.com/ChainShieldSn/chain-shield
 
 Star ⭐ the repo if you find it useful!
 
@@ -130,7 +130,7 @@ Uses GoPlus Security API + DexScreener for data. No API keys needed.
 
 **Try it:** chainshieldsentinel.tech
 
-**Open source:** github.com/0xairdropnoob/chain-shield
+**Open source:** github.com/ChainShieldSn/chain-shield
 
 Would love feedback from the community!
 
@@ -185,7 +185,7 @@ Chain Sentinel is a free, open-source token safety scanner that helps you detect
 
 **Try it:** chainshieldsentinel.tech
 
-**GitHub:** github.com/0xairdropnoob/chain-shield
+**GitHub:** github.com/ChainShieldSn/chain-shield
 
 ---
 
@@ -217,7 +217,7 @@ I'm reaching out about a partnership opportunity with Chain Sentinel, a free tok
 
 **Links:**
 - Website: chainshieldsentinel.tech
-- GitHub: github.com/0xairdropnoob/chain-shield
+- GitHub: github.com/ChainShieldSn/chain-shield
 - Twitter: @ChainShieldSn
 
 Would you be open to a quick call to discuss?
@@ -243,7 +243,7 @@ Detect honeypots, rugpulls, and scams before you buy!
 
 **Try it:** chainshieldsentinel.tech
 
-**Open source:** github.com/0xairdropnoob/chain-shield
+**Open source:** github.com/ChainShieldSn/chain-shield
 
 **API available:** For developers who want to integrate
 

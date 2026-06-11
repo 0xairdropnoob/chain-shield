@@ -207,5 +207,5 @@ with ChainSentinel(api_key="cs_key") as client:
 
 - [API Documentation](https://chainshieldsentinel.tech/docs)
 - [Changelog](https://chainshieldsentinel.tech/changelog)
-- [GitHub](https://github.com/0xairdropnoob/chain-shield)
+- [GitHub](https://github.com/ChainShieldSn/chain-shield)
 - [Chain Sentinel](https://chainshieldsentinel.tech)

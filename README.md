@@ -31,7 +31,7 @@
 
 ```bash
 # Clone
-git clone https://github.com/0xairdropnoob/chain-shield.git
+git clone https://github.com/ChainShieldSn/chain-shield.git
 cd chain-shield
 
 # Setup
@@ -175,4 +175,4 @@ MIT
 
 ---
 
-**Part of the [Sentinel](https://github.com/0xairdropnoob) Suite**
+**Part of the [Sentinel](https://github.com/ChainShieldSn) Suite**
