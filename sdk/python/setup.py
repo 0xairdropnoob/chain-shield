@@ -15,7 +15,7 @@ setup(
     url="https://chainshieldsentinel.tech",
     project_urls={
         "Documentation": "https://chainshieldsentinel.tech/docs",
-        "Source": "https://github.com/0xairdropnoob/chain-shield",
+        "Source": "https://github.com/ChainShieldSn/chain-shield",
         "Changelog": "https://chainshieldsentinel.tech/changelog",
     },
     packages=find_packages(),
