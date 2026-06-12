@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /api-docs
+
+Sitemap: https://www.chainshieldsentinel.tech/sitemap.xml
