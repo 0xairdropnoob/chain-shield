@@ -85,6 +85,17 @@ CHAINS = {
         "color": "#FF0420",
         "icon": "🔴"
     },
+    "robinhood": {
+        "name": "Robinhood Chain",
+        "goplus_id": "4663",
+        "dexscreener_slug": "robinhood",
+        "explorer": "https://so-explorer.poptyedev.com",
+        "rpc": "https://poptye-always-win.poptyedev.com",
+        "chain_id": 4663,
+        "native_token": "ETH",
+        "color": "#00BF63",
+        "icon": "🟢"
+    },
     "solana": {
         "name": "Solana",
         "goplus_id": "solana",

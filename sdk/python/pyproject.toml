@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chain-sentinel"
+version = "1.0.0"
+description = "Python SDK for Chain Sentinel — Free token safety scanner across 9 blockchains"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "ChainShield", email = "info@chainshieldsentinel.tech"},
+]
+keywords = ["crypto", "blockchain", "security", "scanner", "rugpull", "honeypot", "token", "defi", "web3"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Security",
+    "Topic :: Office/Business :: Financial",
+]
+dependencies = [
+    "httpx>=0.24.0",
+]
+
+[project.urls]
+Homepage = "https://chainshieldsentinel.tech"
+Documentation = "https://chainshieldsentinel.tech/docs"
+Repository = "https://github.com/ChainShieldSn/chain-shield"
+Changelog = "https://github.com/ChainShieldSn/chain-shield/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["chain_sentinel*"]

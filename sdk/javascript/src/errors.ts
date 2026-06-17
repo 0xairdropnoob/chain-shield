@@ -34,3 +34,10 @@ export class NotFoundError extends ChainSentinelError {
     this.name = 'NotFoundError';
   }
 }
+
+export class ValidationError extends ChainSentinelError {
+  constructor(message: string, response?: unknown) {
+    super(message, 400, response);
+    this.name = 'ValidationError';
+  }
+}

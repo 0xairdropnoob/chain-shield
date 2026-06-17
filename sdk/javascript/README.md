@@ -1,160 +1,224 @@
-# Chain Sentinel JavaScript/TypeScript SDK
+# Chain Sentinel — JavaScript/TypeScript SDK
 
-Official SDK for the [Chain Sentinel](https://chain-sentinel.io) blockchain risk-analysis API. Zero dependencies — uses native `fetch` (Node 18+).
+[![npm version](https://img.shields.io/npm/v/@chainsentinel/sdk)](https://www.npmjs.com/package/@chainsentinel/sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Official JavaScript/TypeScript SDK for [Chain Sentinel](https://chainshieldsentinel.tech) — Free token safety scanner across 9 blockchains.
 
 ## Installation
 
 ```bash
-npm install chain-sentinel
+npm install @chainsentinel/sdk
 ```
 
 ## Quick Start
 
-### ES Modules / TypeScript
+```typescript
+import { ChainSentinel } from '@chainsentinel/sdk';
 
-```ts
-import { ChainSentinel } from 'chain-sentinel';
+// Free tier (no API key needed)
+const client = new ChainSentinel();
 
-const sentinel = new ChainSentinel('YOUR_API_KEY');
+// Scan a token
+const result = await client.scan('0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', 'bsc');
 
-const result = await sentinel.scan('0x1234…abcd', 'ethereum');
-console.log(result.riskLevel); // 'low' | 'medium' | 'high' | 'critical'
+console.log(result.summary);        // ✅ PancakeSwap Token (CAKE) — Score: 85/100 [SAFE]
+console.log(result.safety_score);   // 85
+console.log(result.is_honeypot);    // false
+console.log(result.buy_tax);        // 0
+console.log(result.is_safe);        // true
 ```
 
-### CommonJS
+## With API Key (Pro/Enterprise)
 
-```js
-const { ChainSentinel } = require('chain-sentinel');
+```typescript
+const client = new ChainSentinel('cs_your_api_key_here');
 
-const sentinel = new ChainSentinel('YOUR_API_KEY');
+// Or with options
+const client = new ChainSentinel({
+  apiKey: 'cs_your_api_key_here',
+  timeout: 60_000, // 60 seconds
+});
 
-const result = await sentinel.scan('0x1234…abcd', 'ethereum');
-console.log(result.riskLevel);
+// Validate your key
+const info = await client.validateKey();
+console.log(`Plan: ${info.plan}, Usage: ${info.usage_count}`);
 ```
 
-## Constructor
+## API Reference
 
-```ts
-new ChainSentinel(apiKey?: string, baseUrl?: string)
+### Scanning
+
+#### `client.scan(address, chain?) → Promise<ScanResult>`
+
+Scan a token for safety indicators.
+
+**Parameters:**
+- `address` (string): Token contract address
+- `chain` (string): Blockchain network (default: `"bsc"`). Options: `bsc`, `eth`, `base`, `arbitrum`, `polygon`, `avalanche`, `fantom`, `optimism`, `solana`
+
+**Returns:** `ScanResult` with fields:
+- `safety_score` (number): 0-100, higher is safer
+- `risk_level` (string): `safe`, `caution`, `danger`, `critical`
+- `is_honeypot` (boolean): Can't sell if true
+- `can_sell` (boolean): Whether selling is possible
+- `buy_tax` / `sell_tax` (number): Tax percentages
+- `owner_renounced` (boolean): Contract ownership status
+- `is_verified` (boolean): Source code verified
+- `liquidity_locked` (boolean): LP locked status
+- `price_usd`, `volume_24h`, `market_cap` (number): Market data
+- `warnings` (string[]): Risk warnings found
+- `positives` (string[]): Positive indicators
+
+**Example:**
+```typescript
+const result = await client.scan('0xNewToken...', 'base');
+
+if (result.is_honeypot) {
+  console.log('🚨 HONEYPOT — DO NOT BUY!');
+} else if (result.safety_score < 50) {
+  console.log(`🔴 High risk (score: ${result.safety_score})`);
+} else if (result.buy_tax > 10) {
+  console.log(`⚠️ High buy tax: ${result.buy_tax}%`);
+} else {
+  console.log(`✅ Looks safe — Score: ${result.safety_score}`);
+}
 ```
 
-| Param | Default | Description |
-|---|---|---|
-| `apiKey` | `undefined` | API key for authenticated endpoints |
-| `baseUrl` | `https://api.chain-sentinel.io/v1` | Override API base URL |
+### Health Check
 
-## Methods
+#### `client.health() → Promise<HealthResponse>`
 
-### `scan(address, chain?)` → `Promise<ScanResult>`
-
-Analyze a blockchain address for risk signals.
-
-```ts
-const result = await sentinel.scan('0xabc…', 'ethereum');
-// result.riskScore (0-100), result.riskLevel, result.flags[], result.metadata
+```typescript
+const health = await client.health();
+console.log(`Status: ${health.status}, Version: ${health.version}`);
 ```
 
-### `health()` → `Promise<HealthResponse>`
+### Plans
 
-Check API status and rate-limit info.
+#### `client.getPlans() → Promise<PlansResponse>`
 
-```ts
-const h = await sentinel.health();
-// h.status, h.version, h.uptime, h.chains, h.rateLimit
+```typescript
+const { plans } = await client.getPlans();
+plans.forEach(plan => {
+  console.log(`${plan.name}: $${plan.price}/${plan.interval}`);
+});
 ```
 
-### `validateKey()` → `Promise<ValidationResponse>`
+### Webhooks (Pro/Enterprise)
 
-Verify the current API key and get plan details.
+#### `client.createWebhook(url, events?, description?) → Promise<WebhookResponse>`
 
-```ts
-const v = await sentinel.validateKey();
-// v.valid, v.plan, v.expiresAt, v.rateLimit
-```
-
-### `getPlans()` → `Promise<PlansResponse>`
-
-List all available pricing plans.
-
-```ts
-const { plans } = await sentinel.getPlans();
-// plans[].name, plans[].price, plans[].features
-```
-
-### `createWebhook(url, events?)` → `Promise<WebhookResponse>`
-
-Register a webhook endpoint.
-
-```ts
-const { webhook, secret } = await sentinel.createWebhook(
-  'https://example.com/hook',
-  ['scan.complete', 'risk.alert'],
+```typescript
+const { webhook, secret } = await client.createWebhook(
+  'https://myapp.com/webhooks/chain-sentinel',
+  ['scan.complete', 'scan.honeypot'],
+  'Production alerts'
 );
+console.log(`Webhook ID: ${webhook.id}`);
+console.log(`Secret: ${secret}`);  // Save this for signature verification!
 ```
 
-### `listWebhooks()` → `Promise<WebhookListResponse>`
+#### `client.listWebhooks() → Promise<WebhookListResponse>`
 
-Get all registered webhooks.
-
-```ts
-const { webhooks, total } = await sentinel.listWebhooks();
+```typescript
+const { webhooks } = await client.listWebhooks();
+webhooks.forEach(wh => {
+  console.log(`${wh.id}: ${wh.url} (${wh.delivery_count} deliveries)`);
+});
 ```
 
-### `deleteWebhook(webhookId)` → `Promise<void>`
+#### `client.testWebhook(webhookId) → Promise<TestResponse>`
 
-Delete a webhook by ID.
-
-```ts
-await sentinel.deleteWebhook('wh_abc123');
+```typescript
+const result = await client.testWebhook('wh_abc123');
+console.log(`Status: ${result.status}`);
 ```
 
-### `testWebhook(webhookId)` → `Promise<TestResponse>`
+#### `client.deleteWebhook(webhookId) → Promise<void>`
 
-Send a test ping to a webhook.
-
-```ts
-const test = await sentinel.testWebhook('wh_abc123');
-// test.success, test.statusCode, test.latencyMs
+```typescript
+await client.deleteWebhook('wh_abc123');
 ```
 
 ## Error Handling
 
-All errors extend `ChainSentinelError` and include `statusCode` and `response`:
-
-```ts
+```typescript
 import {
+  ChainSentinel,
   ChainSentinelError,
   RateLimitError,
   AuthenticationError,
   NotFoundError,
-} from 'chain-sentinel';
+  ValidationError,
+} from '@chainsentinel/sdk';
+
+const client = new ChainSentinel();
 
 try {
-  await sentinel.scan('0xabc…');
-} catch (err) {
-  if (err instanceof RateLimitError) {
-    console.log(`Rate limited — retry after ${err.retryAfter}s`);
-  } else if (err instanceof AuthenticationError) {
-    console.log('Check your API key');
-  } else if (err instanceof NotFoundError) {
-    console.log('Resource not found');
-  } else if (err instanceof ChainSentinelError) {
-    console.log(`API error ${err.statusCode}: ${err.message}`);
+  const result = await client.scan('0xToken...');
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    console.log(`Rate limited! Retry after ${error.retryAfter}s`);
+  } else if (error instanceof AuthenticationError) {
+    console.log('Invalid API key');
+  } else if (error instanceof NotFoundError) {
+    console.log('Token not found');
+  } else if (error instanceof ValidationError) {
+    console.log(`Validation error: ${error.message}`);
+  } else if (error instanceof ChainSentinelError) {
+    console.log(`Error: ${error.message} (status: ${error.statusCode})`);
   }
 }
 ```
 
-| Error | Status | When |
-|---|---|---|
-| `AuthenticationError` | 401 | Missing or invalid API key |
-| `NotFoundError` | 404 | Resource doesn't exist |
-| `RateLimitError` | 429 | Rate limit exceeded (includes `retryAfter`) |
-| `ChainSentinelError` | any | All other API errors |
+## Pre-Trade Safety Check
+
+```typescript
+import { ChainSentinel } from '@chainsentinel/sdk';
+
+async function isSafeToBuy(
+  address: string,
+  chain: string = 'bsc',
+  minScore: number = 60,
+  maxTax: number = 10.0
+): Promise<{ safe: boolean; reason: string }> {
+  const client = new ChainSentinel();
+  const result = await client.scan(address, chain);
+
+  if (result.is_honeypot) {
+    return { safe: false, reason: 'Honeypot detected' };
+  }
+
+  if (result.safety_score < minScore) {
+    return { safe: false, reason: `Score ${result.safety_score} < ${minScore}` };
+  }
+
+  if (result.buy_tax > maxTax) {
+    return { safe: false, reason: `Buy tax ${result.buy_tax}% > ${maxTax}%` };
+  }
+
+  return { safe: true, reason: result.summary };
+}
+
+// Usage
+const check = await isSafeToBuy('0xNewToken...');
+if (check.safe) {
+  console.log(`✅ ${check.reason}`);
+  // executeBuy();
+} else {
+  console.log(`❌ ${check.reason}`);
+}
+```
 
 ## Requirements
 
-- Node.js ≥ 18.0.0 (native `fetch`)
+- Node.js 18.0.0+
+- TypeScript 5.0+ (for type definitions)
 
-## License
+## Links
 
-MIT
+- [API Documentation](https://chainshieldsentinel.tech/docs)
+- [Python SDK](https://pypi.org/project/chain-sentinel/)
+- [GitHub](https://github.com/ChainShieldSn/chain-shield)
+- [Chain Sentinel](https://chainshieldsentinel.tech)

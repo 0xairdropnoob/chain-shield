@@ -1,7 +1,7 @@
 export { ChainSentinel } from './client';
+export type { ChainSentinelOptions } from './client';
 export type {
   ScanResult,
-  ScanFlag,
   HealthResponse,
   ValidationResponse,
   Plan,
@@ -16,4 +16,5 @@ export {
   RateLimitError,
   AuthenticationError,
   NotFoundError,
+  ValidationError,
 } from './errors';

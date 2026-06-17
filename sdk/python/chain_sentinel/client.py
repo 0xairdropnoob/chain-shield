@@ -19,6 +19,7 @@ DEFAULT_TIMEOUT = 30.0
 
 # Supported chain identifiers
 CHAINS = [
+    "robinhood",
     "bsc",
     "eth",
     "base",
@@ -64,7 +65,7 @@ class ChainSentinel:
     def _build_headers(self) -> Dict[str, str]:
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": f"chain-sentinel-python/0.4.0",
+            "User-Agent": f"chain-sentinel-python/1.0.0",
         }
         if self.api_key:
             headers["X-API-Key"] = self.api_key

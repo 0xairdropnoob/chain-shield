@@ -1,7 +1,7 @@
 {
   "name": "chain-sentinel",
-  "version": "0.4.0",
-  "description": "Official JavaScript/TypeScript SDK for Chain Sentinel — blockchain address risk analysis",
+  "version": "1.0.0",
+  "description": "Official JavaScript/TypeScript SDK for Chain Sentinel — Token safety scanner across 9 blockchains",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
@@ -17,8 +17,29 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["blockchain", "security", "risk-analysis", "sentinel", "chain"],
+  "keywords": [
+    "blockchain",
+    "crypto",
+    "security",
+    "scanner",
+    "rugpull",
+    "honeypot",
+    "token",
+    "defi",
+    "web3",
+    "sentinel"
+  ],
+  "author": "ChainShield",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChainShieldSn/chain-shield.git",
+    "directory": "sdk/javascript"
+  },
+  "homepage": "https://chainshieldsentinel.tech",
+  "bugs": {
+    "url": "https://github.com/ChainShieldSn/chain-shield/issues"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

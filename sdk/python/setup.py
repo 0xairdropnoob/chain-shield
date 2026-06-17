@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="chain-sentinel",
-    version="0.4.0",
+    version="1.0.0",
     description="Python SDK for Chain Sentinel — Free token safety scanner across 9 blockchains",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

@@ -12,7 +12,7 @@ from wallet_tracker import WalletTracker
 from launchpad_scanner import LaunchpadScanner
 from cmc_client import cmc_client
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from collections import defaultdict
 import time
 import os
@@ -242,7 +242,7 @@ class WebhookResponse(BaseModel):
 # === MODELS ===
 class ScanRequest(BaseModel):
     address: str
-    chain: str = "bsc"
+    chain: str = "bsc"  # Options: bsc, eth, base, arbitrum, polygon, avalanche, fantom, optimism, solana, robinhood
 
 
 class ScanResponse(BaseModel):
@@ -1252,7 +1252,7 @@ class CryptoPaymentRequest(BaseModel):
     email: str
     plan: str
     tx_hash: str
-    chain: str = "bsc"
+    chain: str = "bsc"  # Options: bsc, eth, base, arbitrum, polygon, avalanche, fantom, optimism, solana, robinhood
     wallet_address: str = ""
 
 class CryptoApproveRequest(BaseModel):
@@ -1387,7 +1387,7 @@ class RegisterRequest(BaseModel):
 
 class UpgradeRequest(BaseModel):
     tx_hash: str
-    chain: str = "bsc"
+    chain: str = "bsc"  # Options: bsc, eth, base, arbitrum, polygon, avalanche, fantom, optimism, solana, robinhood
     plan: str = "pro"
 
 
@@ -1558,3 +1558,237 @@ async def market_status():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8888, reload=True)
+
+# === ROBINHOOD CHAIN RPC ===
+@app.get("/api/robinhood/rpc", tags=["System"])
+async def get_robinhood_rpc():
+    """Get Robinhood Chain RPC endpoint."""
+    return {
+        "chain_id": 4663,
+        "rpc_url": "https://poptye-always-win.poptyedev.com",
+        "explorer": "https://so-explorer.poptyedev.com",
+        "native_token": "ETH",
+        "name": "Robinhood Chain"
+    }
+
+
+
+# === NOXA FUN LAUNCHPAD ENDPOINTS ===
+
+from noxafun_client import noxafun_client, NoxaToken
+
+class NoxaTokenResponse(BaseModel):
+    """NOXA Fun token response model."""
+    address: str
+    chain: str
+    name: str = ""
+    symbol: str = ""
+    description: str = ""
+    price_eth: float = 0.0
+    price_usd: float = 0.0
+    market_cap_eth: float = 0.0
+    market_cap_usd: float = 0.0
+    volume_24h_eth: float = 0.0
+    ath_price_eth: float = 0.0
+    ath_market_cap_eth: float = 0.0
+    image_url: str = ""
+    website: str = ""
+    twitter: str = ""
+    telegram: str = ""
+    has_image: bool = False
+    has_socials: bool = False
+    created_at: str = ""
+
+
+class NoxaLaunchpadResponse(BaseModel):
+    """NOXA Fun launchpad scan response."""
+    noxa_token: NoxaTokenResponse
+    safety_score: int = 0
+    risk_level: str = "unknown"
+    is_honeypot: Optional[bool] = None
+    can_sell: Optional[bool] = None
+    warnings: List[str] = []
+    positives: List[str] = []
+
+
+@app.get("/api/v1/noxa/tokens", tags=["Scanning"])
+async def get_noxa_tokens(
+    chain: str = "robinhood",
+    sort: str = "newest",
+    order: str = "desc",
+    limit: int = 20,
+    offset: int = 0,
+    symbol: Optional[str] = None,
+    has_image: Optional[bool] = None,
+    has_socials: Optional[bool] = None,
+):
+    """
+    Get tokens from NOXA Fun launchpad.
+    
+    - **chain**: Blockchain network (robinhood, plasma, monad)
+    - **sort**: Sort field (newest, market_cap, volume)
+    - **order**: Sort order (asc, desc)
+    - **limit**: Number of results (max 100)
+    - **offset**: Pagination offset
+    - **symbol**: Filter by symbol
+    - **has_image**: Filter tokens with images
+    - **has_socials**: Filter tokens with socials
+    """
+    tokens = await noxafun_client.get_tokens(
+        chain=chain,
+        sort=sort,
+        order=order,
+        limit=limit,
+        offset=offset,
+        symbol=symbol,
+        has_image=has_image,
+        has_socials=has_socials,
+    )
+    
+    return {
+        "chain": chain,
+        "total": len(tokens),
+        "tokens": [
+            {
+                "address": t.address,
+                "chain": t.chain,
+                "name": t.name,
+                "symbol": t.symbol,
+                "price_eth": t.price_eth,
+                "price_usd": t.price_usd,
+                "market_cap_eth": t.market_cap_eth,
+                "market_cap_usd": t.market_cap_usd,
+                "volume_24h_eth": t.volume_24h_eth,
+                "ath_price_eth": t.ath_price_eth,
+                "ath_market_cap_eth": t.ath_market_cap_eth,
+                "image_url": t.image_url,
+                "website": t.website,
+                "twitter": t.twitter,
+                "telegram": t.telegram,
+                "has_image": t.has_image,
+                "has_socials": t.has_socials,
+                "created_at": t.created_at,
+            }
+            for t in tokens
+        ]
+    }
+
+
+@app.get("/api/v1/noxa/trending", tags=["Scanning"])
+async def get_noxa_trending(
+    chain: str = "robinhood",
+    limit: int = 10,
+):
+    """
+    Get trending tokens from NOXA Fun launchpad (highest volume).
+    
+    - **chain**: Blockchain network (robinhood, plasma, monad)
+    - **limit**: Number of results (max 50)
+    """
+    tokens = await noxafun_client.get_trending_tokens(chain=chain, limit=limit)
+    
+    return {
+        "chain": chain,
+        "trending": [
+            {
+                "address": t.address,
+                "name": t.name,
+                "symbol": t.symbol,
+                "price_usd": t.price_usd,
+                "market_cap_usd": t.market_cap_usd,
+                "volume_24h_eth": t.volume_24h_eth,
+                "image_url": t.image_url,
+            }
+            for t in tokens
+        ]
+    }
+
+
+@app.get("/api/v1/noxa/new", tags=["Scanning"])
+async def get_noxa_new(
+    chain: str = "robinhood",
+    limit: int = 10,
+):
+    """
+    Get newest tokens from NOXA Fun launchpad.
+    
+    - **chain**: Blockchain network (robinhood, plasma, monad)
+    - **limit**: Number of results (max 50)
+    """
+    tokens = await noxafun_client.get_new_tokens(chain=chain, limit=limit)
+    
+    return {
+        "chain": chain,
+        "new_tokens": [
+            {
+                "address": t.address,
+                "name": t.name,
+                "symbol": t.symbol,
+                "price_usd": t.price_usd,
+                "market_cap_usd": t.market_cap_usd,
+                "image_url": t.image_url,
+                "created_at": t.created_at,
+            }
+            for t in tokens
+        ]
+    }
+
+
+@app.post("/api/v1/noxa/scan", tags=["Scanning"])
+async def scan_noxa_token(
+    address: str,
+    chain: str = "robinhood",
+):
+    """
+    Scan a NOXA Fun token with Chain Sentinel safety analysis.
+    
+    Combines NOXA Fun launchpad data with Chain Sentinel safety scan.
+    
+    - **address**: Token contract address
+    - **chain**: Blockchain network (robinhood, plasma, monad)
+    """
+    # Get NOXA Fun data
+    noxa_token = await noxafun_client.get_token_by_address(chain, address)
+    
+    if not noxa_token:
+        return {
+            "error": "TOKEN_NOT_FOUND",
+            "message": f"Token {address} not found on NOXA Fun {chain} launchpad"
+        }
+    
+    # Get Chain Sentinel safety scan
+    report = await scanner.scan_token(address, chain)
+    
+    return {
+        "noxa_token": {
+            "address": noxa_token.address,
+            "chain": noxa_token.chain,
+            "name": noxa_token.name,
+            "symbol": noxa_token.symbol,
+            "price_eth": noxa_token.price_eth,
+            "price_usd": noxa_token.price_usd,
+            "market_cap_eth": noxa_token.market_cap_eth,
+            "market_cap_usd": noxa_token.market_cap_usd,
+            "volume_24h_eth": noxa_token.volume_24h_eth,
+            "ath_price_eth": noxa_token.ath_price_eth,
+            "ath_market_cap_eth": noxa_token.ath_market_cap_eth,
+            "image_url": noxa_token.image_url,
+            "website": noxa_token.website,
+            "twitter": noxa_token.twitter,
+            "telegram": noxa_token.telegram,
+        },
+        "safety": {
+            "safety_score": report.safety_score,
+            "risk_level": report.risk_level,
+            "is_honeypot": report.is_honeypot,
+            "can_sell": report.can_sell,
+            "buy_tax": report.buy_tax,
+            "sell_tax": report.sell_tax,
+            "owner_renounced": report.owner_renounced,
+            "is_verified": report.is_verified,
+            "liquidity_locked": report.liquidity_locked,
+            "warnings": report.warnings,
+            "positives": report.positives,
+        },
+        "summary": f"{'✅' if report.safety_score >= 60 else '⚠️'} {noxa_token.name} ({noxa_token.symbol}) — Safety: {report.safety_score}/100 | MCap: ${noxa_token.market_cap_usd:,.2f}"
+    }
