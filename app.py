@@ -134,6 +134,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # === RATE LIMITER ===
+from per_key_rate_limiter import per_key_limiter
+
+# Legacy rate limiter for backward compatibility
 class RateLimiter:
     def __init__(self, max_requests: int = 20, window_seconds: int = 60):
         self.max_requests = max_requests
@@ -154,7 +157,7 @@ class RateLimiter:
     def get_remaining(self, client_ip: str) -> int:
         now = time.time()
         self.requests[client_ip] = [
-            t for t in self.requests[client_ip]
+            t for t in self.requests[client_ip] 
             if now - t < self.window
         ]
         return max(0, self.max_requests - len(self.requests[client_ip]))
@@ -175,25 +178,20 @@ async def add_rate_limit_headers(request: Request, call_next):
     response = await call_next(request)
     
     if request.url.path.startswith("/api/"):
-        client_ip = request.client.host
-        remaining = rate_limiter.get_remaining(client_ip)
-        reset_time = rate_limiter.get_reset_time(client_ip)
-        
-        # Determine max based on API key
+        client_ip = request.client.host if request.client else "unknown"
         api_key = request.headers.get("X-API-Key")
-        max_req = 20  # default free
+        
+        # Get plan from API key
+        plan = "free"
         if api_key:
             key_info = api_key_manager.validate_key(api_key)
             if key_info:
-                limits = api_key_manager.get_usage_limits(key_info["plan"])
-                max_req = limits.get("scans_per_minute", 20)
-                if max_req == -1:
-                    max_req = 999999  # unlimited
+                plan = key_info.get("plan", "free")
         
-        response.headers["X-RateLimit-Limit"] = str(max_req)
-        response.headers["X-RateLimit-Remaining"] = str(remaining)
-        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + reset_time)
-        response.headers["X-RateLimit-Policy"] = f"{max_req};w=60"
+        # Get per-key rate limit headers
+        headers = per_key_limiter.get_headers(api_key, client_ip, plan)
+        for header_name, header_value in headers.items():
+            response.headers[header_name] = header_value
     
     return response
 
@@ -319,13 +317,36 @@ async def scan_token(req: ScanRequest, request: Request):
         # No API key, use free tier
         max_requests = 20
     
-    # Rate limit check
-    client_ip = request.client.host
-    if not rate_limiter.is_allowed(client_ip):
-        remaining_time = rate_limiter.get_reset_time(client_ip)
+    # Rate limit check (per-key)
+    client_ip = request.client.host if request.client else "unknown"
+    api_key = request.headers.get("X-API-Key")
+    
+    # Get plan from API key
+    plan = "free"
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info:
+            plan = key_info.get("plan", "free")
+    
+    if not per_key_limiter.is_allowed(api_key, client_ip, plan):
+        usage = per_key_limiter.get_usage(api_key, client_ip, plan)
         raise HTTPException(
             status_code=429,
-            detail=f"Rate limit exceeded. Try again in {remaining_time}s. ({max_requests} scans/min limit)"
+            detail={
+                "error": "RATE_LIMIT_EXCEEDED",
+                "message": f"Rate limit exceeded. Try again in {usage['reset_minute']}s.",
+                "limits": {
+                    "per_minute": usage["limit_minute"],
+                    "per_hour": usage["limit_hour"],
+                    "per_day": usage["limit_day"]
+                },
+                "used": {
+                    "minute": usage["used_minute"],
+                    "hour": usage["used_hour"],
+                    "day": usage["used_day"]
+                },
+                "reset_in_seconds": usage["reset_minute"]
+            }
         )
     
     report = await scanner.scan_token(req.address, req.chain)
