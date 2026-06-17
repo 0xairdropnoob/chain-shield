@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- SEO Meta Tags -->
     <title>Chain Sentinel — Smart Wallet Tracker + Launchpad Scanner | Token Safety for Web3</title>
-    <meta name="description" content="Track whale wallets, scan new tokens from pump.fun & launchpads, and detect rugpulls — all in one platform. Smart money tracking across 9 blockchains.">
+    <meta name="description" content="Track whale wallets, scan new tokens from pump.fun & launchpads, and detect rugpulls — all in one platform. Smart money tracking across 10 blockchains.">
     <meta name="keywords" content="token scanner, rugpull detector, honeypot checker, crypto safety, blockchain security, token audit, BSC scanner, Ethereum scanner, Solana scanner, web3 security">
     <meta name="author" content="Sentinel">
     <meta name="robots" content="index, follow">
@@ -40,7 +40,7 @@
         "@type": "WebApplication",
         "name": "Chain Sentinel",
         "url": "https://chainshieldsentinel.tech",
-        "description": "Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 9 blockchains.",
+        "description": "Free instant token safety scanner. Detect honeypots, rugpulls, and scams across 10 blockchains.",
         "applicationCategory": "SecurityApplication",
         "operatingSystem": "Web",
         "offers": {
@@ -309,7 +309,7 @@
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm">1</div>
                     <div class="text-3xl mb-3 mt-2">🔍</div>
                     <h4 class="font-bold mb-1">Paste Any Contract</h4>
-                    <p class="desc-text text-sm">Drop any token address. We scan across 9 blockchains instantly — honeypot, tax, liquidity, ownership.</p>
+                    <p class="desc-text text-sm">Drop any token address. We scan across 10 blockchains instantly — honeypot, tax, liquidity, ownership.</p>
                 </div>
                 <div class="result-card rounded-2xl p-6 text-center relative">
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-sm">2</div>
@@ -332,7 +332,7 @@
                 <a href="#scanner" class="result-card rounded-2xl p-6 text-center hover:border-indigo-500/30 transition-all group">
                     <div class="text-4xl mb-3">🛡️</div>
                     <h3 class="font-bold text-lg mb-1 group-hover:text-indigo-400 transition">Token Scanner</h3>
-                    <p class="text-zinc-500 text-sm">Paste any contract address. Get instant safety report with honeypot detection, tax checks, and rug risk score across 9 chains.</p>
+                    <p class="text-zinc-500 text-sm">Paste any contract address. Get instant safety report with honeypot detection, tax checks, and rug risk score across 10 chains.</p>
                 </a>
                 <a href="#smart-wallets" class="result-card rounded-2xl p-6 text-center hover:border-purple-500/30 transition-all group">
                     <div class="text-4xl mb-3">👛</div>
@@ -351,11 +351,11 @@
         <div class="mb-12">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div class="result-card rounded-xl p-5">
-                    <div class="text-3xl font-bold text-indigo-400"><span class="counter" id="counterLaunchpads" data-target="5">0</span></div>
+                    <div class="text-3xl font-bold text-indigo-400"><span class="counter" id="counterLaunchpads" data-target="6">0</span></div>
                     <div class="text-xs text-zinc-500 mt-1">Launchpads Tracked</div>
                 </div>
                 <div class="result-card rounded-xl p-5">
-                    <div class="text-3xl font-bold text-green-400"><span class="counter" id="counterChains" data-target="9">0</span></div>
+                    <div class="text-3xl font-bold text-green-400"><span class="counter" id="counterChains" data-target="10">0</span></div>
                     <div class="text-xs text-zinc-500 mt-1">Chains Supported</div>
                 </div>
                 <div class="result-card rounded-xl p-5">
@@ -451,6 +451,13 @@
                             <div>
                                 <div class="font-medium text-sm">Solana</div>
                                 <div class="text-xs text-zinc-500">SOL • Fast & cheap</div>
+                            </div>
+                        </div>
+                        <div class="chain-option" data-chain="robinhood" onclick="selectChain('robinhood', '🏹 Robinhood')">
+                            <span class="text-lg">🏹</span>
+                            <div>
+                                <div class="font-medium text-sm">Robinhood</div>
+                                <div class="text-xs text-zinc-500">ETH • Robinhood Chain</div>
                             </div>
                         </div>
                     </div>
@@ -626,7 +633,7 @@
         <div id="emptyState" class="text-center py-16">
             <div class="text-6xl mb-4">🔍</div>
             <p class="text-zinc-500">Enter a contract address above to scan</p>
-            <p class="text-zinc-600 text-sm mt-2">Supports 9 chains: BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana</p>
+            <p class="text-zinc-600 text-sm mt-2">Supports 10 chains: BSC, ETH, Base, Arbitrum, Polygon, Avalanche, Fantom, Optimism, Solana, Robinhood</p>
         </div>
 
         <!-- Features Section -->
@@ -900,7 +907,7 @@
                     <ul class="space-y-3 text-sm mb-8">
                         <li class="flex items-center gap-2">
                             <span class="text-green-400">✓</span>
-                            <span>Token safety scanner (9 chains)</span>
+                            <span>Token safety scanner (10 chains)</span>
                         </li>
                         <li class="flex items-center gap-2">
                             <span class="text-green-400">✓</span>
