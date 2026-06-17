@@ -545,6 +545,91 @@ async def batch_scan_tokens(req: BatchScanRequest, request: Request):
     )
 
 
+# === WALLET SUMMARY ENDPOINT ===
+class WalletSummaryResponse(BaseModel):
+    address: str
+    chains: list
+    plan: str
+    recent_trades: list
+    total_trades_visible: Optional[int] = None
+    total_trades_hidden: Optional[int] = None
+    total_trades: Optional[int] = None
+    pnl: Optional[dict] = None
+    holdings: Optional[list] = None
+    upgrade_message: Optional[str] = None
+
+
+@app.get("/api/wallet/{address}", response_model=WalletSummaryResponse, tags=["Wallet"])
+async def get_wallet_summary(
+    address: str, 
+    request: Request,
+    chain: Optional[str] = None
+):
+    """
+    Get wallet summary: trades, PnL, and holdings.
+    
+    **Free tier:** Shows 3 recent trades, no PnL data.
+    **Pro tier:** Full trade history, PnL breakdown, holdings.
+    
+    Query parameters:
+    - `chain` (optional): Filter by chain (bsc, eth, base, etc.)
+    """
+    # Check API key and get plan
+    api_key = request.headers.get("X-API-Key")
+    client_ip = request.client.host if request.client else "unknown"
+    plan = "free"
+    
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info:
+            plan = key_info.get("plan", "free")
+    
+    # Rate limit check
+    if not per_key_limiter.is_allowed(api_key, client_ip, plan):
+        usage = per_key_limiter.get_usage(api_key, client_ip, plan)
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "error": "RATE_LIMIT_EXCEEDED",
+                "message": f"Rate limit exceeded. Try again in {usage['reset_minute']}s."
+            }
+        )
+    
+    # Validate address format
+    if not address or len(address) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_ADDRESS",
+                "message": "Invalid wallet address format."
+            }
+        )
+    
+    # Determine chains to scan
+    chains = None
+    if chain:
+        chains = [chain]
+    
+    # Get wallet summary based on plan
+    is_pro = plan in ["pro", "enterprise"]
+    
+    try:
+        summary = await wallet_tracker.get_wallet_summary(
+            address=address,
+            chains=chains,
+            is_pro=is_pro
+        )
+        return summary
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "SCAN_FAILED",
+                "message": f"Failed to fetch wallet data: {str(e)}"
+            }
+        )
+
+
 @app.get("/api/health")
 async def health():
     return {
