@@ -385,6 +385,166 @@ async def scan_token(req: ScanRequest, request: Request):
     )
 
 
+# === BATCH SCAN ENDPOINT ===
+class BatchScanRequest(BaseModel):
+    tokens: list  # List of {address: str, chain: str}
+
+
+class BatchScanResponse(BaseModel):
+    results: list
+    total: int
+    successful: int
+    failed: int
+    rate_limit_info: dict
+
+
+@app.post("/api/scan/batch", response_model=BatchScanResponse, tags=["Scanning"])
+async def batch_scan_tokens(req: BatchScanRequest, request: Request):
+    """
+    Scan multiple tokens in a single request.
+    
+    Request body:
+    {
+        "tokens": [
+            {"address": "0x...", "chain": "bsc"},
+            {"address": "0x...", "chain": "eth"},
+            ...
+        ]
+    }
+    
+    Limits:
+    - Free: max 5 tokens per batch
+    - Pro: max 10 tokens per batch
+    - Enterprise: max 50 tokens per batch
+    
+    Rate limit: 1 batch = N single scans (where N = number of tokens)
+    """
+    # Check API key and get plan
+    api_key = request.headers.get("X-API-Key")
+    client_ip = request.client.host if request.client else "unknown"
+    plan = "free"
+    
+    if api_key:
+        key_info = api_key_manager.validate_key(api_key)
+        if key_info:
+            plan = key_info.get("plan", "free")
+    
+    # Batch size limits per plan
+    batch_limits = {
+        "free": 5,
+        "pro": 10,
+        "enterprise": 50
+    }
+    max_batch = batch_limits.get(plan, 5)
+    
+    # Validate batch size
+    if len(req.tokens) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "EMPTY_BATCH",
+                "message": "At least one token is required"
+            }
+        )
+    
+    if len(req.tokens) > max_batch:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "BATCH_TOO_LARGE",
+                "message": f"Maximum {max_batch} tokens per batch for {plan} plan",
+                "max_allowed": max_batch,
+                "received": len(req.tokens)
+            }
+        )
+    
+    # Rate limit check - count batch as N requests
+    for _ in range(len(req.tokens)):
+        if not per_key_limiter.is_allowed(api_key, client_ip, plan):
+            usage = per_key_limiter.get_usage(api_key, client_ip, plan)
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "RATE_LIMIT_EXCEEDED",
+                    "message": f"Rate limit exceeded for batch scan. Try again in {usage['reset_minute']}s.",
+                    "limits": {
+                        "per_minute": usage["limit_minute"],
+                        "per_hour": usage["limit_hour"],
+                        "per_day": usage["limit_day"]
+                    }
+                }
+            )
+    
+    # Scan all tokens (with concurrency limit)
+    import asyncio
+    results = []
+    successful = 0
+    failed = 0
+    
+    # Process in parallel with semaphore to limit concurrency
+    sem = asyncio.Semaphore(5)  # Max 5 concurrent scans
+    
+    async def scan_one(token_data):
+        nonlocal successful, failed
+        async with sem:
+            try:
+                address = token_data.get("address", "")
+                chain = token_data.get("chain", "bsc")
+                
+                if not address:
+                    failed += 1
+                    return {
+                        "address": address,
+                        "chain": chain,
+                        "error": "MISSING_ADDRESS",
+                        "message": "Token address is required"
+                    }
+                
+                report = await scanner.scan_token(address, chain)
+                successful += 1
+                
+                return {
+                    "address": report.address,
+                    "chain": report.chain,
+                    "name": report.name,
+                    "symbol": report.symbol,
+                    "safety_score": report.safety_score,
+                    "risk_level": report.risk_level,
+                    "is_honeypot": report.is_honeypot,
+                    "can_sell": report.can_sell,
+                    "warnings": report.warnings,
+                    "positives": report.positives
+                }
+            except Exception as e:
+                failed += 1
+                return {
+                    "address": token_data.get("address", ""),
+                    "chain": token_data.get("chain", "bsc"),
+                    "error": "SCAN_FAILED",
+                    "message": str(e)
+                }
+    
+    # Run all scans concurrently
+    tasks = [scan_one(token) for token in req.tokens]
+    results = await asyncio.gather(*tasks)
+    
+    # Get final rate limit info
+    usage = per_key_limiter.get_usage(api_key, client_ip, plan)
+    
+    return BatchScanResponse(
+        results=results,
+        total=len(req.tokens),
+        successful=successful,
+        failed=failed,
+        rate_limit_info={
+            "remaining_minute": usage["remaining_minute"],
+            "remaining_hour": usage["remaining_hour"],
+            "remaining_day": usage["remaining_day"],
+            "reset_minute": usage["reset_minute"]
+        }
+    )
+
+
 @app.get("/api/health")
 async def health():
     return {
