@@ -65,15 +65,15 @@ class PerKeyRateLimiter:
         """Get rate limits based on plan"""
         limits = {
             "free": {
-                "requests_per_minute": 20,
-                "requests_per_hour": 500,
-                "requests_per_day": 1000,
-                "burst": 5  # max concurrent
+                "requests_per_minute": 5,
+                "requests_per_hour": 15,
+                "requests_per_day": 50,
+                "burst": 2  # max concurrent
             },
             "pro": {
                 "requests_per_minute": 100,
-                "requests_per_hour": 5000,
-                "requests_per_day": 50000,
+                "requests_per_hour": 3000,
+                "requests_per_day": 30000,
                 "burst": 20
             },
             "enterprise": {
