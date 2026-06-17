@@ -9,7 +9,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
-NOXA_FUN_BASE_URL = "https://fun.noxa.fi"
+NOXA_FUN_BASE_URL = "https://awk00kk00gskkw0o8kc488kg.notoriouslywrong.com"
 NOXA_DEX_URL = "https://dex.noxa.fi"
 
 # Supported chains on NOXA Fun
@@ -60,26 +60,26 @@ class NoxaToken:
         """Create NoxaToken from API response dict."""
         return cls(
             address=data.get("address", ""),
-            chain=data.get("chain", ""),
+            chain=str(data.get("chainId", "")),
             name=data.get("name", ""),
             symbol=data.get("symbol", ""),
             description=data.get("description", ""),
             price_eth=data.get("priceEth", 0.0),
-            price_usd=data.get("priceUsd", 0.0),
+            price_usd=0.0,  # API doesn't return USD price directly
             market_cap_eth=data.get("marketCapEth", 0.0),
-            market_cap_usd=data.get("marketCapUsd", 0.0),
+            market_cap_usd=0.0,  # API doesn't return USD market cap directly
             volume_24h_eth=data.get("volume24hEth", 0.0),
             ath_price_eth=data.get("athPriceEth", 0.0),
             ath_market_cap_eth=data.get("athMarketCapEth", 0.0),
             ath_net_buy_amount_eth=data.get("athNetBuyAmountEth", 0.0),
-            image_url=data.get("imageUrl", ""),
+            image_url=data.get("logo", ""),
             website=data.get("website", ""),
             twitter=data.get("twitter", ""),
             telegram=data.get("telegram", ""),
-            has_image=data.get("hasImage", False),
-            has_socials=data.get("hasSocials", False),
-            created_at=data.get("createdAt", ""),
-            updated_at=data.get("updatedAt", ""),
+            has_image=bool(data.get("logo", "")),
+            has_socials=bool(data.get("twitter", "") or data.get("telegram", "")),
+            created_at=data.get("createdAtTime", ""),
+            updated_at=data.get("lastUpdated", ""),
         )
     
     @property
@@ -214,12 +214,17 @@ class NoxaFunClient:
             params["minAthNetBuyAmountEth"] = min_ath_net_buy_amount_eth
         
         try:
-            response = await client.get(f"/v1/{chain}", params=params)
+            response = await client.get(f"/v1/{chain}/tokens", params=params)
             response.raise_for_status()
             data = response.json()
             
-            # Parse response
-            tokens_data = data if isinstance(data, list) else data.get("tokens", data.get("data", []))
+            # Parse response - API returns {"pagination": {...}, "tokens": [...]}
+            if isinstance(data, dict):
+                tokens_data = data.get("tokens", [])
+            elif isinstance(data, list):
+                tokens_data = data
+            else:
+                tokens_data = []
             return [NoxaToken.from_dict(t) for t in tokens_data]
         
         except httpx.HTTPStatusError as e:
