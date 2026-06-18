@@ -1226,6 +1226,7 @@ print(result.summary)
                     <input type="hidden" name="_captcha" value="false">
                     <input type="hidden" name="_template" value="table">
                     <input type="hidden" name="_next" value="https://chainshieldsentinel.tech/?submitted=true">
+                    <input type="hidden" name="_replyto" id="replyToField" value="">
                     <!-- Honeypot anti-spam -->
                     <input type="text" name="_honey" style="display:none">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1244,6 +1245,13 @@ print(result.summary)
                         <p class="text-green-400 font-semibold">✅ Message sent! We'll get back to you soon.</p>
                     </div>
                 </form>
+                <script>
+                // Auto-copy email to _replyto so replies go to the submitter
+                document.getElementById('contactForm').addEventListener('submit', function() {
+                    var emailVal = document.querySelector('input[name="email"]').value;
+                    document.getElementById('replyToField').value = emailVal;
+                });
+                </script>
             </div>
         </div>
 
